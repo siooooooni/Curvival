@@ -1,0 +1,54 @@
+-- ncurses 사용법 --
+
+[!] 컴파일 방법: gcc main.c -o main -lncurses
+
+stdscr: 기본 창(전체 터미널 화면)
+initscr() : ncurses 시작, 내부 세팅
+printw("Hello, World!") : 텍스트 출력
+refresh() : 화면 갱신
+getch() : 입력 대기 (키를 눌러야 종료)
+endwin() : ncurses 종료 및 터미널 복원
+
+WINDOW : 구조체 포인터로 창을 관리
+newwin(높이, 너비, y, x) : 새 창 생성
+wprintw(win, ...) : 해당 창에 출력
+wrefresh(win) : 해당 창만 갱신
+wgetch(win) : 특정 창에서 입력 받기
+keypad(win, TRUE) : 방향키 등 특수키 입력 허용
+
+move(y, x) : 커서 위치 이동
+wmove(win, y, x) : win 창에서 커서 이동
+clear() : 전체 화면 지우기
+erase() : 현재 창 내용 지우기
+delwin(win) : 창 삭제
+box(박스를 그릴 대상 창(WINDOW 포인터), 세로(좌우) 테두리에 사용할 문자, 가로(상하) 테두리에 사용할 문자) : 창에 테두리 그리기
+ex) box(win, '|', '-')
+start_color() : 컬러 쓰기 시작
+init_pair(color, COLOR_RED, COLOR_BLACK) : 컬러 지정 (color는 정수)
+attron(COLOR_PAIR(color)) : 색칠 시작
+attroff(COLOR_PAIR(color)) : 색칠 끝
+
+예시)
+#include <ncurses.h>
+
+int main() {
+    initscr();
+    start_color();
+    init_pair(1, COLOR_YELLOW, COLOR_BLUE);
+
+    WINDOW *win = newwin(5, 30, 5, 10);
+    box(win, 0, 0);
+
+    attron(COLOR_PAIR(1));
+    printw("메인 창에 출력!\n");
+    attroff(COLOR_PAIR(1));
+
+    wprintw(win, "서브 창에 출력!");
+    refresh();
+    wrefresh(win);
+
+    getch();
+    delwin(win);
+    endwin();
+    return 0;
+}
