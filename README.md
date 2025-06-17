@@ -1,0 +1,13 @@
+명령어 아직 불확실함. 근데 대충 정리함.  
+
+업데이트 할거 있을 때 명령어 (무조건 제대로 됐는지 다시 확인 필수!)  
+"""
+git add .  
+git commit -m "커밋 메시지"  
+git push -u origin main  
+"""
+
+업데이트 받고 싶을 때  
+"""
+git pull https://github.com/CodeSorting/Curvival  
+"""
