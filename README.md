@@ -9,5 +9,5 @@ git push -u origin main
 
 업데이트 받고 싶을 때  
 ```
-git pull https://github.com/CodeSorting/Curvival  
+이거 아는 사람 업데이트좀.
 ```
