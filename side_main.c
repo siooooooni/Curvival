@@ -6,7 +6,7 @@
 
 #define MAP_HEIGHT 150
 #define MAP_WIDTH 300
-#define HOUSE_COUNT 7
+#define HOUSE_COUNT 12
 #define ZOMBIE_MAX 20
 #define ZOMBIE_MIN 15
 #define ITEM_COUNT 3
@@ -113,15 +113,33 @@ void draw_building(chtype map[MAP_HEIGHT][MAP_WIDTH], Rect b, int color_pair) {
 	if (b.y1 > b.y2) swap_int(&b.y1, &b.y2);
     if (b.x1 > b.x2) swap_int(&b.x1, &b.x2);
 	// 상하 테두리
-    for (int x = b.x1; x <= b.x2; x++) {
+    for (int x=b.x1;x<=b.x2;++x) {
         map[b.y1][x] = '#' | COLOR_PAIR(color_pair);  // 상단
         map[b.y2][x] = '#' | COLOR_PAIR(color_pair);  // 하단
     }
 
     // 좌우 테두리
-    for (int y = b.y1; y <= b.y2; y++) {
+    for (int y=b.y1;y<=b.y2;++y) {
         map[y][b.x1] = '#' | COLOR_PAIR(color_pair);  // 좌측
         map[y][b.x2] = '#' | COLOR_PAIR(color_pair);  // 우측
+    }
+	// 가운데에 랜덤으로 구멍(문) 하나 뚫기
+    int midx = (b.x1 + b.x2) / 2;
+    int midy = (b.y1 + b.y2) / 2;
+    int side = rand() % 4;  // 0: 상 1: 하 2: 좌 3: 우
+    switch (side) {
+        case 0:  // 상단 중앙
+            map[b.y1][midx] = GROUND | COLOR_PAIR(1);
+            break;
+        case 1:  // 하단 중앙
+            map[b.y2][midx] = GROUND | COLOR_PAIR(1);
+            break;
+        case 2:  // 좌측 중앙
+            map[midy][b.x1] = GROUND | COLOR_PAIR(1);
+            break;
+        case 3:  // 우측 중앙
+            map[midy][b.x2] = GROUND | COLOR_PAIR(1);
+            break;
     }
 }
 
@@ -149,14 +167,19 @@ void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
     }
    	//건물 생성 리스트 (왼쪽 위 사각형, 오른쪽 아래 사각형)
 	Rect buildings[HOUSE_COUNT] = {
-        {5, 5, 10, 15},     // ↘ 정방향
-        {20, 30, 15, 25},   // ↖ 역방향
-        {40, 70, 45, 60},   // ↙ 정방향
-        {60, 10, 55, 5},     // ↗ 역방향
-		{80, 95, 86, 101},
-		{110, 120, 115, 127},
-		{63, 30, 73, 40},
-    }; 
+    	{  5,   5,  10,  15},   // 좌상단
+    	{  8,  50,  15,  70},   // 상단 중간
+    	{  2, 120,  10, 150},   // 상단 우측
+    	{ 20, 180,  30, 210},   // 중상 우측
+    	{ 35,  30,  45,  75},   // 중간 왼쪽
+    	{ 60,  80,  72, 110},   // 중간
+    	{ 90,  10, 105,  45},   // 중하단 왼쪽
+    	{110, 140, 125, 170},   // 중하단 우측
+    	{130, 200, 145, 240},   // 하단 우측
+    	{ 40, 250,  55, 290},   // 중간 우측 극단
+    	{ 80, 200,  95, 260},   // 중하단 우측
+    	{ 60, 150,  75, 190},   // 중단 우측
+	};
 	for (int i=0;i<HOUSE_COUNT-1;++i) {
 		draw_building(map,buildings[i],2);
 	}
