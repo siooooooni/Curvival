@@ -12,14 +12,11 @@
 #define ZOMBIE_MIN 100
 #define ITEM_COUNT 20 //아이템 개수
 #define VACCINE_COUNT 5 //각각 DEBUG 글자로 할 예정
-#define TREE_COUNT 30 //트리 개수 30개
 #define VIEW_HEIGHT 21 //플레이어 시야 크기
 #define VIEW_WIDTH 51
 #define VIEW_ANGLE 0.2f //플레이어 시야 각도
-#define ROCK_COUNT 40 // 바위 개수
-#define WATER_COUNT 30 // 물웅덩이 개수
 
-typedef enum {PLAYER = '8', ZOMBIE = 'z', ITEM = '!', WALL = '#', GROUND = '.', TREE = 'T'} type;
+typedef enum {PLAYER = '8', ZOMBIE = 'z', ITEM = '!', WALL = '#', GROUND = '.'} type;
 typedef enum {UP = 119, RIGHT = 100, DOWN = 115, LEFT = 97} dir;
 
 //좌표
@@ -62,8 +59,6 @@ void draw_building(chtype map[MAP_HEIGHT][MAP_WIDTH], Rect b, int color_pair); /
 void draw_view_map(chtype map[MAP_HEIGHT][MAP_WIDTH], human player); //플레이어 시야 그리기
 void move_zombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint); //좀비 이동
 void HumanMove(human *player, int way); //플레이어 이동
-void make_tree(chtype map[MAP_HEIGHT][MAP_WIDTH], int y, int x);
-void make_obstacle(chtype map[MAP_HEIGHT][MAP_WIDTH]); // 장애물 생성
 
 int main() {
     system("clear");
@@ -81,12 +76,9 @@ int main() {
     init_pair(5, 226, 245);  // 노란색 글자, 회색 배경 : 아이템
     init_pair(6, 46, 46);    // 초록색 글자, 초록색 배경 : 백신
     init_pair(7, 240, 240);  // 진한 회색 글자, 진한 회색 배경 : 시야 밖
-    init_pair(8, 236, 236); // 바위(진한 회색)
-    init_pair(9, 39, 39);   // 물웅덩이(파란색)
 
     //시작하고 출력
     init_map(map);
-    make_obstacle(map); // 장애물 생성
     struct timespec last_zombie_move, now; //초+나노초로 시간 저장하는 구조체
     clock_gettime(CLOCK_MONOTONIC, &last_zombie_move); //현재 시간 구조체에 저장
     while(1){
@@ -246,8 +238,6 @@ void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
         make_vaccine(map,temp[i]);
     }
     map[player.point.y][player.point.x] = PLAYER | COLOR_PAIR(3) | A_BOLD; //플레이어
-    //장애물 랜덤 생성
-    make_obstacle(map);
 }
 
 //백신 알파벳 별로 만들기 위해 함수 작성함.
@@ -513,54 +503,6 @@ void move_zombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint) {
             zombies[i].point.y = ny;
             zombies[i].point.x = nx;
             map[ny][nx] = ZOMBIE | COLOR_PAIR(4);
-        }
-    }
-}
-
-// 장애물 생성 함수
-void make_obstacle(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
-    // 바위 패턴(3x3)
-    int rock_pattern[3][3] = {
-        {0,1,0},
-        {1,1,1},
-        {1,1,1}
-    };
-    // 물웅덩이 패턴(3x3)
-    int water_pattern[3][3] = {
-        {1,1,1},
-        {1,1,1},
-        {1,1,1}
-    };
-    // 바위(진한 회색, COLOR_PAIR(12))
-    int rock_cnt = 0, try_limit = 10000;
-    while(rock_cnt < ROCK_COUNT && try_limit--) {
-        int y = rand() % (MAP_HEIGHT - 4) + 1;
-        int x = rand() % (MAP_WIDTH - 4) + 1;
-        int can_place = 1;
-        for(int dy=0; dy<3; ++dy) for(int dx=0; dx<3; ++dx) {
-            if(rock_pattern[dy][dx] && (map[y+dy][x+dx] & A_CHARTEXT) != GROUND) can_place = 0;
-        }
-        if(can_place) {
-            for(int dy=0; dy<3; ++dy) for(int dx=0; dx<3; ++dx) {
-                if(rock_pattern[dy][dx]) map[y+dy][x+dx] = 'O' | COLOR_PAIR(8) | A_BOLD;
-            }
-            rock_cnt++;
-        }
-    }
-    // 물웅덩이(파란색, COLOR_PAIR(11))
-    int water_cnt = 0;
-    while(water_cnt < WATER_COUNT && try_limit--) {
-        int y = rand() % (MAP_HEIGHT - 4) + 1;
-        int x = rand() % (MAP_WIDTH - 4) + 1;
-        int can_place = 1;
-        for(int dy=0; dy<3; ++dy) for(int dx=0; dx<3; ++dx) {
-            if(water_pattern[dy][dx] && (map[y+dy][x+dx] & A_CHARTEXT) != GROUND) can_place = 0;
-        }
-        if(can_place) {
-            for(int dy=0; dy<3; ++dy) for(int dx=0; dx<3; ++dx) {
-                if(water_pattern[dy][dx]) map[y+dy][x+dx] = '~' | COLOR_PAIR(9);
-            }
-            water_cnt++;
         }
     }
 }
