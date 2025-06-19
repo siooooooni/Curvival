@@ -1,6 +1,7 @@
 #ifndef MAP_H
 #define MAP_H
 
+<<<<<<< Updated upstream
 #include <stdio.h>
 #include <string.h>
 #include <ncurses.h>
@@ -12,18 +13,21 @@
 #define ZOMBIE_MAX 20
 #define ZOMBIE_MIN 15
 #define ITEM_COUNT 3
+=======
+>>>>>>> Stashed changes
 //chtype map[MAP_HEIGHT][MAP_WIDTH];
-enum Object {EMPTY = '.',WALL = '#', ZOMBIE = 'z', PLAYER = '8', ITEM = '!'};
+enum Object {GROUND = '.',WALL = '#', ZOMBIE = 'z', PLAYER = '8', ITEM = '!'};
 void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
     for (int i=0;i<MAP_HEIGHT;++i) {
         for (int j=0;j<MAP_WIDTH;++j) {
-            map[i][j] = '.' | COLOR_PAIR(1); //빈칸
+            map[i][j] = GROUND | COLOR_PAIR(1); //빈칸
         }
     }
     for (int i=0;i<MAP_WIDTH;++i) map[0][i] = WALL | COLOR_PAIR(2); //벽
     for (int i=0;i<MAP_HEIGHT;++i) map[i][0] = WALL | COLOR_PAIR(2);
     for (int i=0;i<MAP_WIDTH;++i) map[MAP_HEIGHT-1][i] = WALL | COLOR_PAIR(2);
     for (int i=0;i<MAP_HEIGHT;++i) map[i][MAP_WIDTH-1] = WALL | COLOR_PAIR(2);
+<<<<<<< Updated upstream
 	//건물 4개 생성 (직사각형)
 	srand(time(NULL));
 	int w,h,ry,rx;
@@ -70,6 +74,12 @@ void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
         } while (map[y][x] != (EMPTY | COLOR_PAIR(1)));
         map[y][x] = ITEM | COLOR_PAIR(5) | A_BLINK;
     }
+=======
+    map[10][10] = PLAYER | COLOR_PAIR(3) | A_BOLD; //플레이어
+    map[48][30] = ZOMBIE | COLOR_PAIR(4); //좀비
+    map[30][30] = ITEM | COLOR_PAIR(5) | A_BLINK; //아이템
+
+>>>>>>> Stashed changes
 }
 void draw_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
     for (int i=0;i<MAP_HEIGHT;++i) {
