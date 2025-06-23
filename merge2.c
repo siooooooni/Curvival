@@ -5,7 +5,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <math.h>
-
+#include "story.h"
 #define MAP_HEIGHT 150 //맵 크기
 #define MAP_WIDTH 300
 #define HOUSE_COUNT 12 //집 개수
@@ -239,23 +239,29 @@ void swap_int(int* a, int* b) {
 
 //시작할 때 뜨는 UI
 void init_UI() {
-    printf("==============================\n");
-    printf("\tZOMBIE SURVIVAL\n");
-    printf("==============================\n");
-    printf("\t1. New Game\n");
-    printf("\t2. Load Game (미구현) \n");
-    printf("\t3. Options (미구현) \n");
-    printf("\t4. Exit\n");
-    printf("GAME START? : ");
-    int n = 0;
-    scanf("%d",&n);
-    getchar();
-    if (n==4) exit(0);
-    else if (n==1) {
-        return;
-    }
-    //else if (n==2) {}
-    //else if (n==3) {}
+	while (1) {	
+    	printf("==============================\n");
+    	printf("\tZOMBIE SURVIVAL\n");
+    	printf("==============================\n");
+    	printf("\t0. Prologue\n");
+    	printf("\t1. New Game\n");
+   		printf("\t2. Load Game (미구현) \n");
+    	printf("\t3. Options (미구현) \n");
+    	printf("\t4. Exit\n");
+    	printf("GAME START? : ");
+    	int n = 0;
+    	scanf("%d",&n);
+    	getchar();
+    	if (n==4) exit(0);
+    	else if (n==1) {
+        	return;
+    	}
+		else if (n==0) {
+			init_story();
+		}
+		//else if (n==2) {}
+    	//else if (n==3) {}
+	}
 }
 
 //건물 그리기
