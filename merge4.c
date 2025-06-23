@@ -870,7 +870,7 @@ bool check_touch() {
         char who = map[ny][nx] & A_CHARTEXT;
         if (who == 'z') {
             player.hp -= ZOMBIE_DAMAGE;
-            if (player.hp < 0) you_die();
+            if (player.hp <= 0) you_die();
             // 무적 시작
             player.invincible = 1;
             clock_gettime(CLOCK_MONOTONIC, &player.invincible_end);
@@ -883,7 +883,7 @@ bool check_touch() {
         }
         else if (who == 'f') {
             player.hp -= FZOMBIE_DAMAGE;
-            if (player.hp < 0) you_die();
+            if (player.hp <= 0) you_die();
             // 무적 시작
             player.invincible = 1;
             clock_gettime(CLOCK_MONOTONIC, &player.invincible_end);
