@@ -5,12 +5,17 @@
 #include <time.h>
 #include <unistd.h>
 #include <math.h>
-
+#include "story.h"
 #define MAP_HEIGHT 150 //맵 크기
 #define MAP_WIDTH 300
 #define HOUSE_COUNT 12 //집 개수
-#define ZOMBIE_MAX 200 //좀비 개수 최소~최대
-#define ZOMBIE_MIN 100
+
+#define ZOMBIE_MAX 130 //좀비 개수 최소~최대
+#define ZOMBIE_MIN 80
+
+#define FZOMBIE_MAX 50 //빠른 좀비 개수 최소~최대 
+#define FZOMBIE_MIN 40
+
 #define ITEM_COUNT 20 //아이템 개수
 #define VACCINE_COUNT 5 //각각 DEBUG 글자로 할 예정
 #define TREE_COUNT 30 //트리 개수 30개
@@ -36,14 +41,23 @@
 
 #define ZOMBIE_ACT_TIME 30 //좀비 분노 지속 시간
 #define ZOMBIE_ACT_ADJ 5 //좀비 분노 조절값
-#define ZOMBIE_ACT_BASE_DISTANCE 4 //기본 소음 범위
-#define NOIZE_VAL 1.0 //소음 발생 단위
-#define ZOMBIE_CRAZY_DISTANCE 15.0 //좀비 분노폭발 소음 기준치
-#define ZOMBIE_CRAZY_SPEED 0.2 //좀비 분노폭발 때 좀비 스피드
-#define ZOMBIE_GENERAL_SPEED 0.3 //일반적인 좀비 속도
-#define ZOMBIE_CALM_DOWN_VAL 0.8 //좀비 분노가 가라앉는 속도
+#define ZOMBIE_ACT_BASE_DISTANCE 6 //기본 소음 범위
+#define ZOMBIE_NOIZE_UNIT 1.0 //소음 발생 단위
+#define ZOMBIE_GENERAL_SPEED 0.25 //일반적인 좀비 속도
+#define ZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도
+#define ZOMBIE_ACT_LIMIT 10.0 //좀비 분노 한계
+#define ZOMBIE_DAMAGE 10
 
-typedef enum {PLAYER = '8', ZOMBIE = 'z', ITEM = '!', WALL = '#', GROUND = '.', POND = '~', ROCK = '@'} type;
+#define FZOMBIE_ACT_TIME 20 //좀비 분노 지속 시간  
+#define FZOMBIE_ACT_ADJ 5 //좀비 분노 조절값    
+#define FZOMBIE_ACT_BASE_DISTANCE 7 //기본 소음 범위      
+#define FZOMBIE_NOIZE_UNIT 1.0 //소음 발생 단위     
+#define FZOMBIE_GENERAL_SPEED 0.15 //일반적인 좀비 속도         
+#define FZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도    
+#define FZOMBIE_ACT_LIMIT 11.0 //좀비 분노 한계
+#define FZOMBIE_DAMAGE 15
+
+typedef enum {PLAYER = '8', ZOMBIE = 'z', FZOMBIE = 'f', ITEM = '!', WALL = '#', GROUND = '.', POND = '~', ROCK = '@'} type;
 typedef enum {UP = 119, RIGHT = 100, DOWN = 115, LEFT = 97} dir;
 
 //좌표
@@ -58,6 +72,8 @@ typedef struct {
     yx point;
     int hp;
     dir lookDir; //시야 방향
+    int invincible;         // 무적 상태 여부 (1: 무적, 0: 일반)
+    struct timespec invincible_end; // 무적 끝나는 시간
 } human;
 
 //직사각형 건물
@@ -74,12 +90,25 @@ typedef struct {
 	int actAmt;
 } zombie_t;
 
+//아이템 구조체
+typedef struct {
+    int injection; //광범위 공격 : 1번
+    int pointer; //총 : 2번
+    int patch; //포션 : 3번
+} item_list;
+item_list itemList = {0,0,0};
 chtype map[MAP_HEIGHT][MAP_WIDTH];
 human player = {.role = PLAYER, .point = {10, 10}, .hp = 100, .lookDir = RIGHT};
+
 zombie_t zombies[ZOMBIE_MAX];
 int zombie_count = 0;
 double zombie_act_distance = ZOMBIE_ACT_BASE_DISTANCE; //현재 소음 범위
 double zombie_speed = ZOMBIE_GENERAL_SPEED; //좀비 속도
+
+zombie_t fzombies[FZOMBIE_MAX];
+int fzombie_count = 0;
+double fzombie_act_distance = FZOMBIE_ACT_BASE_DISTANCE; //현재 소음 범위
+double fzombie_speed = FZOMBIE_GENERAL_SPEED; //좀비 속도
 
 double view_start_angle = RIGHT_VIEW_START_ANGLE; //시야 시작 각도
 double view_end_angle = RIGHT_VIEW_END_ANGLE; //시야 끝 각도
@@ -99,6 +128,10 @@ void make_tree(chtype map[MAP_HEIGHT][MAP_WIDTH], int y, int x);
 void make_obstacle(chtype map[MAP_HEIGHT][MAP_WIDTH]); // 장애물 생성
 void line_view(yx point, double angle, double distance, int *r);
 void player_view();
+void move_fzombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint);
+int grab_item();
+bool check_touch();
+void you_die();
 
 int main() {
     system("clear");
@@ -113,12 +146,13 @@ int main() {
     init_pair(1, 245, 245);  // 회색 글자, 회색 배경 : 땅
     init_pair(2, 15, 235);     // 흰색 글자(15번), 검은 배경(0번) : 벽
     init_pair(3, 21, 245);   // 파란색 글자(21번), 회색 배경 : 플레이어
-    init_pair(4, 196, 245);  // 빨간색 글자, 회색 배경 : 좀비
+    init_pair(4, 88, 245);  // 빨간색 글자, 회색 배경 : 좀비
     init_pair(5, 226, 245);  // 노란색 글자, 회색 배경 : 아이템
     init_pair(6, 46, 46);    // 초록색 글자, 초록색 배경 : 백신
     init_pair(7, 240, 240);  // 진한 회색 글자, 진한 회색 배경 : 시야 밖
     init_pair(8, 245, 236); // 바위(진한 회색)
     init_pair(9, 45, 39);   // 물웅덩이(파란색)
+	init_pair(10, 54, 245); // 빠른 좀비
     
 	//시야 밖 색상 (100 + 기존색상번호)
 	init_pair(101, 243, 243);  // 땅
@@ -127,14 +161,17 @@ int main() {
 	init_pair(109, 238, 238);  // 물웅덩이
 
 	//좀비 분노 색상
-	init_pair(104, 175, 57); //좀비 분노
+	init_pair(104, 196, 245); //좀비 분노
+	init_pair(110, 201, 245); //빠른 좀비 분노
 
 	//시작하고 출력
     init_map(map);
     make_obstacle(map); // 장애물 생성
     struct timespec last_zombie_move, now; //초+나노초로 시간 저장하는 구조체
     clock_gettime(CLOCK_MONOTONIC, &last_zombie_move); //현재 시간 구조체에 저장
-    while(1){
+    struct timespec flast_zombie_move, fnow; //초+나노초로 시간 저장하는 구조체
+    clock_gettime(CLOCK_MONOTONIC, &flast_zombie_move); //현재 시간 구조체에 저장
+	while(1){
         startPoint = (yx){player.point.y - ((VIEW_HEIGHT-1) / 2), player.point.x - ((VIEW_WIDTH-1) / 2)}; // 왼쪽 위 좌표
     	endPoint = (yx){player.point.y + ((VIEW_HEIGHT-1) / 2), player.point.x + ((VIEW_WIDTH-1) / 2)}; // 오른쪽 아래 좌표
     	// 좌표들이 맵을 벗어날 경우 예외 처리
@@ -157,12 +194,24 @@ int main() {
 
 		draw_view_map(map, player);
         
-		mvprintw(23, 0, "noize val: %lf\nzombie speed: %lf\n", zombie_act_distance, zombie_speed);
+		mvprintw(22, 0, "noize val: %lf\nzombie speed: %lf\n", zombie_act_distance, zombie_speed);
 
 		refresh();
+        bool isTouched = check_touch();
+        if (isTouched) {
+            //0.5초간 무적 상태?
+        }
+
         int key = getch(); //키보드 입력 받기
         if(key != -1){ //키보드 입력이 있다면
-			zombie_act_distance += NOIZE_VAL;
+            if (key=='5') grab_item();
+			if(zombie_act_distance <= ZOMBIE_ACT_LIMIT) {
+                zombie_act_distance += ZOMBIE_NOIZE_UNIT;
+            }
+			if(fzombie_act_distance <= FZOMBIE_ACT_LIMIT) {
+                fzombie_act_distance += FZOMBIE_NOIZE_UNIT;
+            }
+
 
             map[player.point.y][player.point.x] = GROUND | COLOR_PAIR(1);
             HumanMove(&player, key);
@@ -174,12 +223,6 @@ int main() {
         double elapsed = (now.tv_sec - last_zombie_move.tv_sec) + (now.tv_nsec - last_zombie_move.tv_nsec) / 1e9;
         if (elapsed > zombie_speed) {
             if(zombie_act_distance > ZOMBIE_ACT_BASE_DISTANCE) { //현재 소음 범위가 기본 소음 범위를 넘어섰다면
-            	if(zombie_act_distance > ZOMBIE_CRAZY_DISTANCE) { //현재 소음 범위가 ZOMBIE CRAZY 범위를 넘어섰다면
-                	zombie_speed = ZOMBIE_CRAZY_SPEED;
-            	}
-            	else {
-                	zombie_speed = ZOMBIE_GENERAL_SPEED;
-            	}
             	zombie_act_distance -= ZOMBIE_CALM_DOWN_VAL; // 소음 범위 줄이기
         	}
         	else {
@@ -188,6 +231,29 @@ int main() {
 
 			move_zombies(map, player.point);
             last_zombie_move = now; //현재 시간 구조체에 저장
+        }
+
+		clock_gettime(CLOCK_MONOTONIC, &fnow);
+        double felapsed = (fnow.tv_sec - flast_zombie_move.tv_sec) + (fnow.tv_nsec - flast_zombie_move.tv_nsec) / 1e9;
+        if (felapsed > fzombie_speed) {
+            if(fzombie_act_distance > FZOMBIE_ACT_BASE_DISTANCE) { //현재 소음 범위가 기본 소음 범위를 넘어섰다면
+                fzombie_act_distance -= FZOMBIE_CALM_DOWN_VAL; // 소음 범위 줄이기
+            }
+            else {
+                fzombie_act_distance = FZOMBIE_ACT_BASE_DISTANCE;
+            }
+
+            move_fzombies(map, player.point);
+            flast_zombie_move = fnow; //현재 시간 구조체에 저장
+        }
+
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        if (player.invincible) {
+            if ((now.tv_sec > player.invincible_end.tv_sec) ||
+                (now.tv_sec == player.invincible_end.tv_sec && now.tv_nsec > player.invincible_end.tv_nsec)) {
+                player.invincible = 0; // 무적 해제
+            }
         }
     }
     endwin();
@@ -202,23 +268,29 @@ void swap_int(int* a, int* b) {
 
 //시작할 때 뜨는 UI
 void init_UI() {
-    printf("==============================\n");
-    printf("\tZOMBIE SURVIVAL\n");
-    printf("==============================\n");
-    printf("\t1. New Game\n");
-    printf("\t2. Load Game (미구현) \n");
-    printf("\t3. Options (미구현) \n");
-    printf("\t4. Exit\n");
-    printf("GAME START? : ");
-    int n = 0;
-    scanf("%d",&n);
-    getchar();
-    if (n==4) exit(0);
-    else if (n==1) {
-        return;
-    }
-    //else if (n==2) {}
-    //else if (n==3) {}
+	while (1) {	
+    	printf("==============================\n");
+    	printf("\tZOMBIE SURVIVAL\n");
+    	printf("==============================\n");
+    	printf("\t0. Prologue\n");
+    	printf("\t1. New Game\n");
+   		printf("\t2. Load Game (미구현) \n");
+    	printf("\t3. Options (미구현) \n");
+    	printf("\t4. Exit\n");
+    	printf("GAME START? : ");
+    	int n = 0;
+    	scanf("%d",&n);
+    	getchar();
+    	if (n==4) exit(0);
+    	else if (n==1) {
+        	return;
+    	}
+		else if (n==0) {
+			init_story();
+		}
+		//else if (n==2) {}
+    	//else if (n==3) {}
+	}
 }
 
 //건물 그리기
@@ -315,11 +387,29 @@ void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
 		zombies[zidx].actAmt = 0;
         zidx++; //인덱스 증가
     }
+	
+	int fzombieCount = rand() % (FZOMBIE_MAX - FZOMBIE_MIN + 1) + FZOMBIE_MIN;
+    fzombie_count = fzombieCount;
+    int fzidx = 0;
+    for (int z=0;z<fzombieCount;++z) {
+        int y,x;
+        do {
+            y = rand() % (MAP_HEIGHT - 2) + 1; //벽은 제외
+            x = rand() % (MAP_WIDTH  - 2) + 1;
+        } while (map[y][x] != (GROUND | COLOR_PAIR(1))); //빈 공간이어야함
+        map[y][x] = FZOMBIE | COLOR_PAIR(10);
+        //좀비 구조체 배열에 좀비 좌표 저장
+        fzombies[fzidx].point.y = y;
+        fzombies[fzidx].point.x = x;
+        fzombies[fzidx].alive = 1;
+        fzombies[fzidx].actAmt = 0;
+        fzidx++; //인덱스 증가
+    }
     //아이템 랜덤 생성 : ITEM_COUNT
     for (int it=0;it<ITEM_COUNT;++it) {
         int y,x;
         do {
-            y = rand() % (MAP_HEIGHT - 2) + 1;
+			y = rand() % (MAP_HEIGHT - 2) + 1;
             x = rand() % (MAP_WIDTH  - 2) + 1;
         } while (map[y][x] != (GROUND | COLOR_PAIR(1)));
         map[y][x] = ITEM | COLOR_PAIR(5) | A_BLINK;
@@ -554,7 +644,7 @@ void move_zombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint) {
 			int is_act = 0;
 
 			double distance = sqrt((ny - player.point.y) * (ny - player.point.y) + (nx - player.point.x) * (nx - player.point.x)); //zombie와 플레이어 거리계산 (수정 필요) 
-			if((ny - player.point.y) * (ny - player.point.y) + (nx - player.point.x) * (nx - player.point.x)/ZOMBIE_ACT_ADJ <= zombie_act_distance * zombie_act_distance) { //좀비가 플레이어를 보았는지 확인하는 코드
+			if(sqrt((ny - player.point.y) * (ny - player.point.y) + (nx - player.point.x) * (nx - player.point.x)/ZOMBIE_ACT_ADJ) <= zombie_act_distance) { //좀비가 플레이어를 보았는지 확인하는 코드
 				double angle = atan2(ny - player.point.y, nx - player.point.x) * (180.0 / M_PI) + 180.0;
             	int is_blocked = 0;
             	line_view(zombies[i].point, angle, distance, &is_blocked);
@@ -614,6 +704,77 @@ void move_zombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint) {
         }
     }
 }
+void move_fzombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint) {
+    for (int i = 0; i < fzombie_count; ++i) {
+        if (!fzombies[i].alive) continue; //좀비가 죽은 놈이면 끝
+        //시야 내에 있는지 확인
+        int ny = fzombies[i].point.y;
+        int nx = fzombies[i].point.x;
+
+        if(fzombies[i].actAmt == 0) { // 좀비 비활성화 상태 움직임
+            int is_act = 0;
+
+            double distance = sqrt((ny - player.point.y) * (ny - player.point.y) + (nx - player.point.x) * (nx - player.point.x)); //zombie와 플레이어 거리계산 (수정 필요)
+            if(sqrt((ny - player.point.y) * (ny - player.point.y) + (nx - player.point.x) * (nx - player.point.x)/FZOMBIE_ACT_ADJ) <= fzombie_act_distance) { //좀비가 플레이어를 보았는지 확인하는 코드
+                double angle = atan2(ny - player.point.y, nx - player.point.x) * (180.0 / M_PI) + 180.0;
+                int is_blocked = 0;
+                line_view(fzombies[i].point, angle, distance, &is_blocked);
+
+                if(is_blocked == 0) { //좀비가 플레이어를 봤다면
+                    fzombies[i].actAmt = FZOMBIE_ACT_TIME;
+                    is_act = 1;
+                }
+            }
+
+            if(!is_act) { //좀비가 플레이어를 못 봤다면
+                int chooseDyDx = rand()%6;
+
+                switch(chooseDyDx) {
+                    case 0: ++ny; break;
+                    case 1: --ny; break;
+                    case 2: ++nx; break;
+                    case 3: --nx; break;
+                    default: break;
+                }
+            }
+        }
+        if(fzombies[i].actAmt > 0) { // 좀비 활성화 상태 움직임
+            int chooseDyDx = rand()%2;
+
+            if (chooseDyDx) {
+                if (playerPoint.y < ny) ny--;
+                else if (playerPoint.y > ny) ny++;
+            }
+            else {
+                if (playerPoint.x < nx) nx--;
+                else if (playerPoint.x > nx) nx++;
+            }
+
+            --(fzombies[i].actAmt);
+        }
+
+        // 이동 가능 체크 (벽, 다른 좀비, 플레이어 등)
+        int can_move = 1;
+        if ((map[ny][nx] & A_CHARTEXT) != GROUND) can_move = 0; // &로 문자 코드만 추출해서 땅이 아니면 이동 불가
+        //다른 좀비와 겹치는지 확인
+        for (int j = 0; j < fzombie_count; ++j) {
+            if (i != j && fzombies[j].alive && fzombies[j].point.y == ny && fzombies[j].point.x == nx) {
+                can_move = 0;
+                break;
+            }
+        }
+        //플레이어와 겹치는지 확인
+        if (player.point.y == ny && player.point.x == nx) can_move = 0;
+        //이동 가능하면 이동
+        if (can_move) {
+            map[fzombies[i].point.y][fzombies[i].point.x] = GROUND | COLOR_PAIR(1);
+            fzombies[i].point.y = ny;
+            fzombies[i].point.x = nx;
+            if(fzombies[i].actAmt > 0) map[ny][nx] = FZOMBIE | COLOR_PAIR(110);
+            else map[ny][nx] = FZOMBIE | COLOR_PAIR(10);
+        }
+    }
+}
 // 장애물 생성 함수
 void make_obstacle(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
     // 바위 패턴(3x3)
@@ -661,3 +822,79 @@ void make_obstacle(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
         }
     }
 }
+
+int grab_item() { //아이템 랜덤 줍기
+    int dx[] = {1,0,-1,0};
+    int dy[] = {0,1,0,-1};
+    for (int dir=0;dir<4;++dir) { //경계값 검사는 안해도 된다. 어차피 끝부분은 벽이다.
+        int nx = player.point.x + dx[dir];
+        int ny = player.point.y + dy[dir];
+        if ((map[ny][nx] & A_CHARTEXT) == '!') {
+            int k = rand()%3;
+            if (!k) itemList.injection += 1;
+            else if (k==1) itemList.pointer += 1;
+            else itemList.patch += 1;
+            map[ny][nx] = GROUND | COLOR_PAIR(1);
+        }
+    }
+}
+
+bool check_touch() {
+    if (player.invincible) return 0; // 무적이면 데미지 없음
+
+    int dx[] = {1,0,-1,0};
+    int dy[] = {0,1,0,-1};
+    for (int dir=0;dir<4;++dir) {
+        int nx = player.point.x + dx[dir];
+        int ny = player.point.y + dy[dir];
+        char who = map[ny][nx] & A_CHARTEXT;
+        if (who == 'z') {
+            player.hp -= ZOMBIE_DAMAGE;
+            if (player.hp < 0) you_die();
+            // 무적 시작
+            player.invincible = 1;
+            clock_gettime(CLOCK_MONOTONIC, &player.invincible_end);
+            player.invincible_end.tv_nsec += 500000000; // 0.5초
+            if (player.invincible_end.tv_nsec >= 1000000000) {
+                player.invincible_end.tv_sec += 1;
+                player.invincible_end.tv_nsec -= 1000000000;
+            }
+            return 1;
+        }
+        else if (who == 'f') {
+            player.hp -= FZOMBIE_DAMAGE;
+            if (player.hp < 0) you_die();
+            // 무적 시작
+            player.invincible = 1;
+            clock_gettime(CLOCK_MONOTONIC, &player.invincible_end);
+            player.invincible_end.tv_nsec += 500000000; // 0.5초
+            if (player.invincible_end.tv_nsec >= 1000000000) {
+                player.invincible_end.tv_sec += 1;
+                player.invincible_end.tv_nsec -= 1000000000;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+void you_die() {
+    endwin(); // ncurses 모드 해제
+    system("clear");
+    printf("\n\n");
+    printf(" __     ______  _    _   _      ____   _____ ______ \n");
+    printf(" \\ \\   / / __ \\| |  | | | |    / __ \\ / ____|  ____|\n");
+    printf("  \\ \\_/ / |  | | |  | | | |   | |  | | (___ | |__   \n");
+    printf("   \\   /| |  | | |  | | | |   | |  | |\\___ \\|  __|  \n");
+    printf("    | | | |__| | |__| | | |___| |__| |____) | |____ \n");
+    printf("    |_|  \\____/ \\____/  |______\\____/|_____/|______|\n");
+    printf("\n");
+    printf("                GAME OVER...\n");
+    printf("\n");
+    printf("         당신은 좀비에게 잡아먹혔습니다...\n");
+    printf("\n\n");
+    printf("         다시 도전하려면 프로그램을 재시작하세요!\n");
+    printf("\n\n");
+    sleep(5);
+    exit(0);
+}
+

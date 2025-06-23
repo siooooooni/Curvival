@@ -86,6 +86,13 @@ typedef struct {
 	int actAmt;
 } zombie_t;
 
+//아이템 구조체
+typedef struct {
+    int injection; //광범위 공격 : 1번
+    int pointer; //총 : 2번
+    int patch; //포션 : 3번
+} item_list;
+item_list itemList = {0,0,0};
 chtype map[MAP_HEIGHT][MAP_WIDTH];
 human player = {.role = PLAYER, .point = {10, 10}, .hp = 100, .lookDir = RIGHT};
 
@@ -118,6 +125,7 @@ void make_obstacle(chtype map[MAP_HEIGHT][MAP_WIDTH]); // 장애물 생성
 void line_view(yx point, double angle, double distance, int *r);
 void player_view();
 void move_fzombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint);
+int grab_item();
 
 int main() {
     system("clear");
@@ -185,6 +193,7 @@ int main() {
 		refresh();
         int key = getch(); //키보드 입력 받기
         if(key != -1){ //키보드 입력이 있다면
+            if (key=='5') grab_item();
 			if(zombie_act_distance <= ZOMBIE_ACT_LIMIT) {
                 zombie_act_distance += ZOMBIE_NOIZE_UNIT;
             }
@@ -793,3 +802,20 @@ void make_obstacle(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
         }
     }
 }
+
+int grab_item() { //아이템 랜덤 줍기
+    int dx[] = {1,0,-1,0};
+    int dy[] = {0,1,0,-1};
+    for (int dir=0;dir<4;++dir) { //경계값 검사는 안해도 된다. 어차피 끝부분은 벽이다.
+        int nx = player.point.x + dx[dir];
+        int ny = player.point.y + dy[dir];
+        if ((map[ny][nx] & A_CHARTEXT) == '!') {
+            int k = rand()%3;
+            if (!k) itemList.injection += 1;
+            else if (k==1) itemList.pointer += 1;
+            else itemList.patch += 1;
+            map[ny][nx] = GROUND | COLOR_PAIR(1);
+        }
+    }
+}
+
