@@ -787,7 +787,7 @@ void move_zombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint) {
 			int is_act = 0;
 
 			double distance = sqrt((ny - player.point.y) * (ny - player.point.y) + (nx - player.point.x) * (nx - player.point.x)); //zombie와 플레이어 거리계산 (수정 필요) 
-			if(sqrt((ny - player.point.y) * (ny - player.point.y) + (nx - player.point.x) * (nx - player.point.x)/ZOMBIE_ACT_ADJ) <= zombie_act_distance) { //좀비가 플레이어를 보았는지 확인하는 코드
+			if((ny - player.point.y) * (ny - player.point.y) + (nx - player.point.x) * (nx - player.point.x)/ZOMBIE_ACT_ADJ <= zombie_act_distance*zombie_act_distance) { //좀비가 플레이어를 보았는지 확인하는 코드
 				double angle = atan2(ny - player.point.y, nx - player.point.x) * (180.0 / M_PI) + 180.0;
             	int is_blocked = 0;
             	line_view(zombies[i].point, angle, distance, &is_blocked);
