@@ -214,6 +214,7 @@ int main() {
 		draw_view_map(map, player);
         game_UI();
         item.UI_hp = player.hp; //UI에 hp 업데이트
+        if (player.hp <= 0) you_die();
 		mvprintw(22, 0, "noize val: %lf\nzombie speed: %lf\n", zombie_act_distance, zombie_speed);
         mvprintw(25, 0, "hp: %d\ngun : %d\ninjection : %d\npacket : %d", item.UI_hp,item.gun,item.injection,item.packet);
 		refresh();
@@ -870,7 +871,6 @@ bool check_touch() {
         char who = map[ny][nx] & A_CHARTEXT;
         if (who == 'z') {
             player.hp -= ZOMBIE_DAMAGE;
-            if (player.hp <= 0) you_die();
             // 무적 시작
             player.invincible = 1;
             clock_gettime(CLOCK_MONOTONIC, &player.invincible_end);
@@ -883,7 +883,6 @@ bool check_touch() {
         }
         else if (who == 'f') {
             player.hp -= FZOMBIE_DAMAGE;
-            if (player.hp <= 0) you_die();
             // 무적 시작
             player.invincible = 1;
             clock_gettime(CLOCK_MONOTONIC, &player.invincible_end);
@@ -1020,4 +1019,5 @@ void use_item(int item_num) {
 		}
 	}
 }
+
 
