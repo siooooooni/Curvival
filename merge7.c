@@ -12,11 +12,11 @@
 #define MAP_WIDTH 300+GAME_UI_WIDTH
 #define HOUSE_COUNT 12 //집 개수
 
-#define ZOMBIE_MAX 130 //좀비 개수 최소~최대
-#define ZOMBIE_MIN 80
+#define ZOMBIE_MAX 200 //좀비 개수 최소~최대
+#define ZOMBIE_MIN 150
 
-#define FZOMBIE_MAX 50 //빠른 좀비 개수 최소~최대 
-#define FZOMBIE_MIN 40
+#define FZOMBIE_MAX 100 //빠른 좀비 개수 최소~최대 
+#define FZOMBIE_MIN 80
 
 #define ITEM_COUNT 20 //아이템 개수
 #define VACCINE_COUNT 5 //각각 DEBUG 글자로 할 예정
@@ -52,6 +52,7 @@
 #define ZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도
 #define ZOMBIE_ACT_LIMIT 10.0 //좀비 분노 한계
 #define ZOMBIE_DAMAGE 10
+#define ZOMBIE_HP 3 //좀비 HP
 
 #define FZOMBIE_ACT_TIME 20 //좀비 분노 지속 시간  
 #define FZOMBIE_ACT_ADJ 5 //좀비 분노 조절값    
@@ -61,6 +62,7 @@
 #define FZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도    
 #define FZOMBIE_ACT_LIMIT 11.0 //좀비 분노 한계
 #define FZOMBIE_DAMAGE 15
+#define FZOMBIE_HP 2 //빠른 좀비 HP
 
 #define GUN ('#' | COLOR_PAIR(103)) //총 모양
 #define INJECTION_RANGE 5 //인젝션 공격 범위 5x5가 기본
@@ -496,6 +498,7 @@ void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
         zombies[zidx].point.y = y;
         zombies[zidx].point.x = x;
         zombies[zidx].alive = 1;
+		zombies[zidx].hp = ZOMBIE_HP;
 		zombies[zidx].actAmt = 0;
         zidx++; //인덱스 증가
     }
@@ -514,6 +517,7 @@ void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
         fzombies[fzidx].point.y = y;
         fzombies[fzidx].point.x = x;
         fzombies[fzidx].alive = 1;
+		fzombies[fzidx].hp = FZOMBIE_HP;
         fzombies[fzidx].actAmt = 0;
         fzidx++; //인덱스 증가
     }
@@ -1147,28 +1151,43 @@ void use_item(int item_num) {
                 
                 char who = map[ny][nx] & A_CHARTEXT;
                 if(who == 'z') {
+					bool is_alive = true;
                     // 좀비 배열에서 해당 좌표의 좀비를 찾아서 alive = 0
                     for(int j = 0; j < zombie_count; ++j) {
                         if(zombies[j].alive && zombies[j].point.y == ny && zombies[j].point.x == nx) {
-                            zombies[j].alive = 0;
-                            break;
+                            --(zombies[j].hp);
+                            if(zombies[j].hp <= 0) {
+								zombies[j].alive = 0;
+								is_alive = false;
+							}
+							break;
                         }
                     }
                     // 맵에서 좀비 제거
-                    map[ny][nx] = GROUND | COLOR_PAIR(1);
-                    break; // 한 마리만 제거
+					if(!is_alive) {
+						map[ny][nx] = GROUND | COLOR_PAIR(1);
+                    	break; // 한 마리만 제거
+					}
                 }
                 else if(who == 'f') {
+					bool is_alive = true;
                     // 빠른 좀비 죽이기 코드
                     for(int j = 0; j < fzombie_count; ++j) {
                         if(fzombies[j].alive && fzombies[j].point.y == ny && fzombies[j].point.x == nx) {
-                            fzombies[j].alive = 0;
+                        	--(fzombies[j].hp);
+                            if(fzombies[j].hp <= 0) {
+                                fzombies[j].alive = 0;
+                                is_alive = false;
+                            }
                             break;
-                        }
+						}
                     }
-                    map[ny][nx] = GROUND | COLOR_PAIR(1);
-                    break;
-                }
+
+                	if(!is_alive) {
+                        map[ny][nx] = GROUND | COLOR_PAIR(1);
+                        break; // 한 마리만 제거
+                    }
+				}
 				else if(who=='#' || who=='@') break;
             }
         }
@@ -1194,20 +1213,27 @@ void use_item(int item_num) {
                     int ny = py + dy;
                     if(nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) continue;
                     mvaddch(ny - startPoint.y, nx - startPoint.x, pattern1[dy + 1][dx + 2]);
-
+					/*
                     for (int i = 0; i < zombie_count; ++i) {
                         if (zombies[i].alive && zombies[i].point.y == ny && zombies[i].point.x == nx) {
-                            zombies[i].alive = 0;
-                            map[ny][nx] = GROUND | COLOR_PAIR(1);
+                            --(zombies[i].hp);
+                            if(zombies[i].hp <= 0) {
+                                zombies[i].alive = 0;
+                            	map[ny][nx] = GROUND | COLOR_PAIR(1);
+							}
                         }
                     }
 
                     for (int i = 0; i < fzombie_count; ++i) {
                         if (fzombies[i].alive && fzombies[i].point.y == ny && fzombies[i].point.x == nx) {
-                            fzombies[i].alive = 0;
-                            map[ny][nx] = GROUND | COLOR_PAIR(1);
-                        }
+                        	--(fzombies[i].hp);
+                            if(fzombies[i].hp <= 0) {
+                                fzombies[i].alive = 0;
+                                map[ny][nx] = GROUND | COLOR_PAIR(1);
+                            }
+						}
                     }
+					*/
                 }
             }
             attroff(COLOR_PAIR(3));
@@ -1236,17 +1262,23 @@ void use_item(int item_num) {
                     // Kill normal zombies in the effect area
                     for (int i = 0; i < zombie_count; ++i) {
                         if (zombies[i].alive && zombies[i].point.y == ny && zombies[i].point.x == nx) {
-                            zombies[i].alive = 0;
-                            map[ny][nx] = GROUND | COLOR_PAIR(1);
-                        }
+                        	--(zombies[i].hp);
+                            if(zombies[i].hp <= 0) {
+                                zombies[i].alive = 0;
+                                map[ny][nx] = GROUND | COLOR_PAIR(1);
+                            }
+						}
                     }
 
                     // Kill fast zombies in the effect area
                     for (int i = 0; i < fzombie_count; ++i) {
                         if (fzombies[i].alive && fzombies[i].point.y == ny && fzombies[i].point.x == nx) {
-                            fzombies[i].alive = 0;
-                            map[ny][nx] = GROUND | COLOR_PAIR(1);
-                        }
+                        	--(fzombies[i].hp);
+                            if(fzombies[i].hp <= 0) {
+                                fzombies[i].alive = 0;
+                                map[ny][nx] = GROUND | COLOR_PAIR(1);
+                            }
+						}
                     }
                 }
             }
