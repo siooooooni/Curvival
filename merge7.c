@@ -1040,27 +1040,19 @@ void you_die() {
 }
 
 void game_UI() {
-	/*
-	for(int i = 0; i < 21; ++i) {
-		for(int j = MAP_WIDTH; j < MAP_WIDTH + 34; ++j) {
-			mvaddch(i + MAP_HEIGHT, j, 'i' | COLOR_PAIR(3));
-		}
-	}
-	*/
-
 	//HP바
 	mvaddch(1, VIEW_WIDTH + 2 + 14, 'H' | COLOR_PAIR(2));
 	mvaddch(1, VIEW_WIDTH + 2 + 15, 'P' | COLOR_PAIR(2));
 	
+
+	int hp_pixel = 30 * (player.hp/100.0);
 	for(int i = 2; i <= 4; ++i) {
-		for(int j = VIEW_WIDTH + 2; j <= VIEW_WIDTH + 2 + 6 * player.hp; ++j) {
+		for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + hp_pixel; ++j) {
 			mvaddch(i, j, '.' | COLOR_PAIR(100));
 		}
-	}
-	for(int i = 2; i <= 4; ++i) {
-		for(int j = VIEW_WIDTH + 2 + 6 * player.hp + 1; j <= VIEW_WIDTH + 31; ++j) {
-			mvaddch(i, j, '.' | COLOR_PAIR(101));
-		}
+		for(int j = VIEW_WIDTH + 2 + hp_pixel; j < VIEW_WIDTH + 2 + 30; ++j) {
+            mvaddch(i, j, '.' | COLOR_PAIR(1));
+        }
 	}
 	
 	//아이템칸
