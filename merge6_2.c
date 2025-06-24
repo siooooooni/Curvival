@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <math.h>
 #include "story.h"
+
 #define GAME_UI_WIDTH 34 //게임 ui 크기
 #define MAP_HEIGHT 150 //맵 크기
 #define MAP_WIDTH 300+GAME_UI_WIDTH
@@ -164,7 +165,7 @@ int main() {
     curs_set(0);
 
     //시야 안 색상
-	init_pair(1, 242, 242);  // 회색 글자, 회색 배경 : 땅
+    init_pair(1, 242, 242);  // 회색 글자, 회색 배경 : 땅
     init_pair(2, 245, 235);     // 흰색 글자(15번), 검은 배경(0번) : 벽
     init_pair(3, 21, 242);   // 파란색 글자(21번), 회색 배경 : 플레이어
     init_pair(4, 88, 242);  // 빨간색 글자, 회색 배경 : 좀비
@@ -173,23 +174,23 @@ int main() {
     init_pair(7, 240, 240);  // 진한 회색 글자, 진한 회색 배경 : 시야 밖
     init_pair(8, 245, 236); // 바위(진한 회색)
     init_pair(9, 45, 39);   // 물웅덩이(파란색)
-    init_pair(10, 54, 242); // 빠른 좀비
-
+	init_pair(10, 54, 242); // 빠른 좀비
+    
     init_pair(100, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
-    init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
-    init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
-    init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
-    init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
+	init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
+	init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
+	init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
+	init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
 
-    //시야 밖 색상 (200 + 기존색상번호)
-    init_pair(201, 240, 240);  // 땅
+	//시야 밖 색상 (200 + 기존색상번호)
+	init_pair(201, 240, 240);  // 땅
     init_pair(202, 243, 232);  // 벽
-    init_pair(203, 238, 238);  // 바위
-    init_pair(204, 238, 238);  // 물웅덩이
+	init_pair(203, 238, 238);  // 바위
+	init_pair(204, 238, 238);  // 물웅덩이
 
-    //좀비 분노 색상
-    init_pair(205, 196, 242); //좀비 분노
-    init_pair(206, 201, 242); //빠른 좀비 분노
+	//좀비 분노 색상
+	init_pair(205, 196, 242); //좀비 분노
+	init_pair(206, 201, 245); //빠른 좀비 분노
 
 	//시작하고 출력
     init_map(map);
@@ -295,66 +296,6 @@ int main() {
         
 			if(game_time % DAY_UNIT == 0) {
             	is_day = !is_day;
-				if(is_day) {
-					if(can_change_color()) {
-						init_pair(1, 242, 242);  // 회색 글자, 회색 배경 : 땅
-    					init_pair(2, 245, 235);     // 흰색 글자(15번), 검은 배경(0번) : 벽
-    					init_pair(3, 21, 242);   // 파란색 글자(21번), 회색 배경 : 플레이어
-    					init_pair(4, 88, 242);  // 빨간색 글자, 회색 배경 : 좀비
-    					init_pair(5, 226, 242);  // 노란색 글자, 회색 배경 : 아이템
-    					init_pair(6, 46, 46);    // 초록색 글자, 초록색 배경 : 백신
-    					init_pair(7, 240, 240);  // 진한 회색 글자, 진한 회색 배경 : 시야 밖
-    					init_pair(8, 245, 236); // 바위(진한 회색)
-    					init_pair(9, 45, 39);   // 물웅덩이(파란색)
-    					init_pair(10, 54, 242); // 빠른 좀비
-
-    					init_pair(100, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
-    					init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
-    					init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
-    					init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
-    					init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
-
-    					//시야 밖 색상 (200 + 기존색상번호)
-    					init_pair(201, 240, 240);  // 땅
-    					init_pair(202, 243, 232);  // 벽
-    					init_pair(203, 238, 238);  // 바위
-    					init_pair(204, 238, 238);  // 물웅덩이
-
-    					//좀비 분노 색상
-    					init_pair(205, 196, 242); //좀비 분노
-    					init_pair(206, 201, 242); //빠른 좀비 분노
-					}
-				}
-				else	{
-					if(can_change_color()) {
-                    	init_pair(1, 239, 239);  // 회색 글자, 회색 배경 : 땅
-                        init_pair(2, 245, 235);     // 흰색 글자(15번), 검은 배경(0번) : 벽
-                        init_pair(3, 21, 239);   // 파란색 글자(21번), 회색 배경 : 플레이어
-                        init_pair(4, 88, 239);  // 빨간색 글자, 회색 배경 : 좀비
-                        init_pair(5, 226, 239);  // 노란색 글자, 회색 배경 : 아이템
-                        init_pair(6, 46, 46);    // 초록색 글자, 초록색 배경 : 백신
-                        init_pair(7, 240, 240);  // 진한 회색 글자, 진한 회색 배경 : 시야 밖
-                        init_pair(8, 245, 236); // 바위(진한 회색)
-                        init_pair(9, 45, 39);   // 물웅덩이(파란색)
-                        init_pair(10, 54, 239); // 빠른 좀비
-
-                        init_pair(100, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
-                        init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
-                        init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
-                        init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
-                        init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
-
-                        //시야 밖 색상 (200 + 기존색상번호)
-                        init_pair(201, 235, 235);  // 땅
-                        init_pair(202, 243, 232);  // 벽
-                        init_pair(203, 236, 236);  // 바위
-                        init_pair(204, 236, 236);  // 물웅덩이
-
-                        //좀비 분노 색상
-                        init_pair(205, 196, 239); //좀비 분노
-                        init_pair(206, 201, 239); //빠른 좀비 분노
-					}
-				}
         	}
 		}
 
@@ -1178,15 +1119,79 @@ void use_item(int item_num) {
 			int px = player.point.x;
 			int py = player.point.y;
 			
-			//INJECTION_RANGE로 범위 설정 : 기본은 5 + 모양은 INJECTION(+)
-			for (int dy=-INJECTION_RANGE;dy<=INJECTION_RANGE;++dy) {
-				for (int dx=-INJECTION_RANGE;dx<=INJECTION_RANGE;++dx) {
-					int nx = px + dx;
-					int ny = py + dy;
-					if(nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) continue;
-					
-				}
-			}
+            // Pattern 1 data
+            char pattern1[3][5] = {
+                {'/', '*', '#', '*', '\\'},
+                {'*', '#', ' ', '#', '*'},
+                {'\\', '*', '#', '*', '/'}
+            };
+
+            // Display Pattern 1
+            attron(COLOR_PAIR(3)); // Assuming color pair 3 is for green text
+            for (int dy = -1; dy <= 1; ++dy) {
+                for (int dx = -2; dx <= 2; ++dx) {
+                    int nx = px + dx;
+                    int ny = py + dy;
+                    if(nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) continue;
+                    mvaddch(ny - startPoint.y, nx - startPoint.x, pattern1[dy + 1][dx + 2]);
+
+                    for (int i = 0; i < zombie_count; ++i) {
+                        if (zombies[i].alive && zombies[i].point.y == ny && zombies[i].point.x == nx) {
+                            zombies[i].alive = 0;
+                            map[ny][nx] = GROUND | COLOR_PAIR(1);
+                        }
+                    }
+
+                    for (int i = 0; i < fzombie_count; ++i) {
+                        if (fzombies[i].alive && fzombies[i].point.y == ny && fzombies[i].point.x == nx) {
+                            fzombies[i].alive = 0;
+                            map[ny][nx] = GROUND | COLOR_PAIR(1);
+                        }
+                    }
+                }
+            }
+            attroff(COLOR_PAIR(3));
+            refresh();
+
+            usleep(200000);
+
+            // Pattern 2 data
+            char pattern2[5][7] = {
+                {'/', '*', '#', '#', '#', '*', '\\'},
+                {'/', '*', '#', ' ', '#', '*', '\\'},
+                {'#', '#', ' ', ' ', ' ', '#', '#'},
+                {'\\', '*', '#', ' ', '#', '*', '/'},
+                {'\\', '*', '#', '#', '#', '*', '/'}
+            };
+            
+            // Display Pattern 2 (clears old pattern area implicitly)
+            attron(COLOR_PAIR(3));
+            for (int dy = -2; dy <= 2; ++dy) {
+                for (int dx = -3; dx <= 3; ++dx) {
+                    int nx = px + dx;
+                    int ny = py + dy;
+                    if(nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) continue;
+                    
+                    mvaddch(ny - startPoint.y, nx - startPoint.x, pattern2[dy + 2][dx + 3]);
+                    // Kill normal zombies in the effect area
+                    for (int i = 0; i < zombie_count; ++i) {
+                        if (zombies[i].alive && zombies[i].point.y == ny && zombies[i].point.x == nx) {
+                            zombies[i].alive = 0;
+                            map[ny][nx] = GROUND | COLOR_PAIR(1);
+                        }
+                    }
+
+                    // Kill fast zombies in the effect area
+                    for (int i = 0; i < fzombie_count; ++i) {
+                        if (fzombies[i].alive && fzombies[i].point.y == ny && fzombies[i].point.x == nx) {
+                            fzombies[i].alive = 0;
+                            map[ny][nx] = GROUND | COLOR_PAIR(1);
+                        }
+                    }
+                }
+            }
+            attroff(COLOR_PAIR(3));
+            refresh();
         }
     }
     else if(item_num == '3') {
