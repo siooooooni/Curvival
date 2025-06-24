@@ -1051,6 +1051,7 @@ void use_item(int item_num) {
                     map[ny][nx] = GROUND | COLOR_PAIR(1);
                     break;
                 }
+				else if(who=='#' || who=='@') break;
             }
         }
     }
