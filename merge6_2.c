@@ -12,11 +12,11 @@
 #define MAP_WIDTH 300+GAME_UI_WIDTH
 #define HOUSE_COUNT 12 //집 개수
 
-#define ZOMBIE_MAX 130 //좀비 개수 최소~최대
-#define ZOMBIE_MIN 80
+#define ZOMBIE_MAX 200 //좀비 개수 최소~최대
+#define ZOMBIE_MIN 150
 
-#define FZOMBIE_MAX 50 //빠른 좀비 개수 최소~최대 
-#define FZOMBIE_MIN 40
+#define FZOMBIE_MAX 100 //빠른 좀비 개수 최소~최대 
+#define FZOMBIE_MIN 80
 
 #define ITEM_COUNT 20 //아이템 개수
 #define VACCINE_COUNT 5 //각각 DEBUG 글자로 할 예정
@@ -52,6 +52,7 @@
 #define ZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도
 #define ZOMBIE_ACT_LIMIT 10.0 //좀비 분노 한계
 #define ZOMBIE_DAMAGE 10
+#define ZOMBIE_HP 3 //좀비 HP
 
 #define FZOMBIE_ACT_TIME 20 //좀비 분노 지속 시간  
 #define FZOMBIE_ACT_ADJ 5 //좀비 분노 조절값    
@@ -61,6 +62,7 @@
 #define FZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도    
 #define FZOMBIE_ACT_LIMIT 11.0 //좀비 분노 한계
 #define FZOMBIE_DAMAGE 15
+#define FZOMBIE_HP 2 //빠른 좀비 HP
 
 #define GUN ('#' | COLOR_PAIR(103)) //총 모양
 #define INJECTION_RANGE 5 //인젝션 공격 범위 5x5가 기본
@@ -163,9 +165,8 @@ int main() {
     nodelay(stdscr, TRUE);
     start_color();
     curs_set(0);
-
-    //시야 안 색상
-    init_pair(1, 242, 242);  // 회색 글자, 회색 배경 : 땅
+	
+	init_pair(1, 242, 242);  // 회색 글자, 회색 배경 : 땅
     init_pair(2, 245, 235);     // 흰색 글자(15번), 검은 배경(0번) : 벽
     init_pair(3, 21, 242);   // 파란색 글자(21번), 회색 배경 : 플레이어
     init_pair(4, 88, 242);  // 빨간색 글자, 회색 배경 : 좀비
@@ -174,23 +175,23 @@ int main() {
     init_pair(7, 240, 240);  // 진한 회색 글자, 진한 회색 배경 : 시야 밖
     init_pair(8, 245, 236); // 바위(진한 회색)
     init_pair(9, 45, 39);   // 물웅덩이(파란색)
-	init_pair(10, 54, 242); // 빠른 좀비
-    
+    init_pair(10, 54, 242); // 빠른 좀비
+
     init_pair(100, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
-	init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
-	init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
-	init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
-	init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
+    init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
+    init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
+    init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
+    init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
 
-	//시야 밖 색상 (200 + 기존색상번호)
-	init_pair(201, 240, 240);  // 땅
+    //시야 밖 색상 (200 + 기존색상번호)
+    init_pair(201, 240, 240);  // 땅
     init_pair(202, 243, 232);  // 벽
-	init_pair(203, 238, 238);  // 바위
-	init_pair(204, 238, 238);  // 물웅덩이
+    init_pair(203, 238, 238);  // 바위
+    init_pair(204, 238, 238);  // 물웅덩이
 
-	//좀비 분노 색상
-	init_pair(205, 196, 242); //좀비 분노
-	init_pair(206, 201, 245); //빠른 좀비 분노
+    //좀비 분노 색상
+    init_pair(205, 196, 242); //좀비 분노
+    init_pair(206, 201, 242); //빠른 좀비 분노
 
 	//시작하고 출력
     init_map(map);
@@ -296,6 +297,67 @@ int main() {
         
 			if(game_time % DAY_UNIT == 0) {
             	is_day = !is_day;
+
+				if(is_day) {
+                    if(can_change_color()) {
+                        init_pair(1, 242, 242);  // 회색 글자, 회색 배경 : 땅
+                        init_pair(2, 245, 235);     // 흰색 글자(15번), 검은 배경(0번) : 벽
+                        init_pair(3, 21, 242);   // 파란색 글자(21번), 회색 배경 : 플레이어
+                        init_pair(4, 88, 242);  // 빨간색 글자, 회색 배경 : 좀비
+                        init_pair(5, 226, 242);  // 노란색 글자, 회색 배경 : 아이템
+                        init_pair(6, 46, 46);    // 초록색 글자, 초록색 배경 : 백신
+                        init_pair(7, 240, 240);  // 진한 회색 글자, 진한 회색 배경 : 시야 밖
+                        init_pair(8, 245, 236); // 바위(진한 회색)
+                        init_pair(9, 45, 39);   // 물웅덩이(파란색)
+                        init_pair(10, 54, 242); // 빠른 좀비
+
+                        init_pair(100, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
+                        init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
+                        init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
+                        init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
+                        init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
+
+                        //시야 밖 색상 (200 + 기존색상번호)
+                        init_pair(201, 240, 240);  // 땅
+                        init_pair(202, 243, 232);  // 벽
+                        init_pair(203, 238, 238);  // 바위
+                        init_pair(204, 238, 238);  // 물웅덩이
+
+                        //좀비 분노 색상
+                        init_pair(205, 196, 242); //좀비 분노
+                        init_pair(206, 201, 242); //빠른 좀비 분노
+                    }
+                }
+                else    {
+                    if(can_change_color()) {
+                        init_pair(1, 239, 239);  // 회색 글자, 회색 배경 : 땅
+                        init_pair(2, 245, 235);     // 흰색 글자(15번), 검은 배경(0번) : 벽
+                        init_pair(3, 21, 239);   // 파란색 글자(21번), 회색 배경 : 플레이어
+                        init_pair(4, 88, 239);  // 빨간색 글자, 회색 배경 : 좀비
+                        init_pair(5, 226, 239);  // 노란색 글자, 회색 배경 : 아이템
+                        init_pair(6, 46, 46);    // 초록색 글자, 초록색 배경 : 백신
+                        init_pair(7, 240, 240);  // 진한 회색 글자, 진한 회색 배경 : 시야 밖
+                        init_pair(8, 245, 236); // 바위(진한 회색)
+                        init_pair(9, 45, 39);   // 물웅덩이(파란색)
+                        init_pair(10, 54, 239); // 빠른 좀비
+
+                        init_pair(100, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
+                        init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
+                        init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
+                        init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
+                        init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
+
+                        //시야 밖 색상 (200 + 기존색상번호)
+                        init_pair(201, 235, 235);  // 땅
+                        init_pair(202, 243, 232);  // 벽
+                        init_pair(203, 236, 236);  // 바위
+                        init_pair(204, 236, 236);  // 물웅덩이
+
+                        //좀비 분노 색상
+                        init_pair(205, 196, 239); //좀비 분노
+                        init_pair(206, 201, 239); //빠른 좀비 분노
+                    }
+                }
         	}
 		}
 
@@ -436,6 +498,7 @@ void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
         zombies[zidx].point.y = y;
         zombies[zidx].point.x = x;
         zombies[zidx].alive = 1;
+		zombies[zidx].hp = ZOMBIE_HP;
 		zombies[zidx].actAmt = 0;
         zidx++; //인덱스 증가
     }
@@ -454,6 +517,7 @@ void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
         fzombies[fzidx].point.y = y;
         fzombies[fzidx].point.x = x;
         fzombies[fzidx].alive = 1;
+		fzombies[fzidx].hp = FZOMBIE_HP;
         fzombies[fzidx].actAmt = 0;
         fzidx++; //인덱스 증가
     }
@@ -1087,28 +1151,43 @@ void use_item(int item_num) {
                 
                 char who = map[ny][nx] & A_CHARTEXT;
                 if(who == 'z') {
+					bool is_alive = true;
                     // 좀비 배열에서 해당 좌표의 좀비를 찾아서 alive = 0
                     for(int j = 0; j < zombie_count; ++j) {
                         if(zombies[j].alive && zombies[j].point.y == ny && zombies[j].point.x == nx) {
-                            zombies[j].alive = 0;
-                            break;
+                            --(zombies[j].hp);
+                            if(zombies[j].hp <= 0) {
+								zombies[j].alive = 0;
+								is_alive = false;
+							}
+							break;
                         }
                     }
                     // 맵에서 좀비 제거
-                    map[ny][nx] = GROUND | COLOR_PAIR(1);
-                    break; // 한 마리만 제거
+					if(!is_alive) {
+						map[ny][nx] = GROUND | COLOR_PAIR(1);
+                    	break; // 한 마리만 제거
+					}
                 }
                 else if(who == 'f') {
+					bool is_alive = true;
                     // 빠른 좀비 죽이기 코드
                     for(int j = 0; j < fzombie_count; ++j) {
                         if(fzombies[j].alive && fzombies[j].point.y == ny && fzombies[j].point.x == nx) {
-                            fzombies[j].alive = 0;
+                        	--(fzombies[j].hp);
+                            if(fzombies[j].hp <= 0) {
+                                fzombies[j].alive = 0;
+                                is_alive = false;
+                            }
                             break;
-                        }
+						}
                     }
-                    map[ny][nx] = GROUND | COLOR_PAIR(1);
-                    break;
-                }
+
+                	if(!is_alive) {
+                        map[ny][nx] = GROUND | COLOR_PAIR(1);
+                        break; // 한 마리만 제거
+                    }
+				}
 				else if(who=='#' || who=='@') break;
             }
         }
@@ -1134,20 +1213,27 @@ void use_item(int item_num) {
                     int ny = py + dy;
                     if(nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) continue;
                     mvaddch(ny - startPoint.y, nx - startPoint.x, pattern1[dy + 1][dx + 2]);
-
+					/*
                     for (int i = 0; i < zombie_count; ++i) {
                         if (zombies[i].alive && zombies[i].point.y == ny && zombies[i].point.x == nx) {
-                            zombies[i].alive = 0;
-                            map[ny][nx] = GROUND | COLOR_PAIR(1);
+                            --(zombies[i].hp);
+                            if(zombies[i].hp <= 0) {
+                                zombies[i].alive = 0;
+                            	map[ny][nx] = GROUND | COLOR_PAIR(1);
+							}
                         }
                     }
 
                     for (int i = 0; i < fzombie_count; ++i) {
                         if (fzombies[i].alive && fzombies[i].point.y == ny && fzombies[i].point.x == nx) {
-                            fzombies[i].alive = 0;
-                            map[ny][nx] = GROUND | COLOR_PAIR(1);
-                        }
+                        	--(fzombies[i].hp);
+                            if(fzombies[i].hp <= 0) {
+                                fzombies[i].alive = 0;
+                                map[ny][nx] = GROUND | COLOR_PAIR(1);
+                            }
+						}
                     }
+					*/
                 }
             }
             attroff(COLOR_PAIR(3));
@@ -1176,17 +1262,23 @@ void use_item(int item_num) {
                     // Kill normal zombies in the effect area
                     for (int i = 0; i < zombie_count; ++i) {
                         if (zombies[i].alive && zombies[i].point.y == ny && zombies[i].point.x == nx) {
-                            zombies[i].alive = 0;
-                            map[ny][nx] = GROUND | COLOR_PAIR(1);
-                        }
+                        	--(zombies[i].hp);
+                            if(zombies[i].hp <= 0) {
+                                zombies[i].alive = 0;
+                                map[ny][nx] = GROUND | COLOR_PAIR(1);
+                            }
+						}
                     }
 
                     // Kill fast zombies in the effect area
                     for (int i = 0; i < fzombie_count; ++i) {
                         if (fzombies[i].alive && fzombies[i].point.y == ny && fzombies[i].point.x == nx) {
-                            fzombies[i].alive = 0;
-                            map[ny][nx] = GROUND | COLOR_PAIR(1);
-                        }
+                        	--(fzombies[i].hp);
+                            if(fzombies[i].hp <= 0) {
+                                fzombies[i].alive = 0;
+                                map[ny][nx] = GROUND | COLOR_PAIR(1);
+                            }
+						}
                     }
                 }
             }
