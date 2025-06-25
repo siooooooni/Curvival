@@ -18,7 +18,7 @@
 #define FZOMBIE_MAX 100 //빠른 좀비 개수 최소~최대 
 #define FZOMBIE_MIN 80
 
-#define ITEM_COUNT 20 //아이템 개수
+#define ITEM_COUNT 100 //아이템 개수
 #define VACCINE_COUNT 5 //각각 DEBUG 글자로 할 예정
 #define TREE_COUNT 30 //트리 개수 30개
 #define VIEW_HEIGHT 21 //플레이어 시야 크기
@@ -177,12 +177,6 @@ int main() {
     init_pair(9, 45, 39);   // 물웅덩이(파란색)
     init_pair(10, 54, 242); // 빠른 좀비
 
-    init_pair(100, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
-    init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
-    init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
-    init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
-    init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
-
     //시야 밖 색상 (200 + 기존색상번호)
     init_pair(201, 240, 240);  // 땅
     init_pair(202, 243, 232);  // 벽
@@ -192,6 +186,15 @@ int main() {
     //좀비 분노 색상
     init_pair(205, 196, 242); //좀비 분노
     init_pair(206, 201, 242); //빠른 좀비 분노
+
+	//UI
+	init_pair(100, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
+    init_pair(101, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
+    init_pair(102, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
+    init_pair(103, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
+    init_pair(104, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
+	init_pair(105, 226, 226); //daynight의 day
+	init_pair(106, 235, 235); //daynight의 night
 
 	//시작하고 출력
     init_map(map);
@@ -1062,20 +1065,38 @@ void you_die() {
 
 void game_UI() {
 	//HP바
-	mvaddch(1, VIEW_WIDTH + 2 + 14, 'H' | COLOR_PAIR(2));
-	mvaddch(1, VIEW_WIDTH + 2 + 15, 'P' | COLOR_PAIR(2));
-	
+	mvprintw(1, VIEW_WIDTH + 2, "HP");
+	//DAYNNIGHT BAR
+	mvprintw(4, VIEW_WIDTH + 2, "DAY & NIGHT");
 
-	int hp_pixel = 30 * (player.hp/100.0);
-	for(int i = 2; i <= 4; ++i) {
+	int hp_pixel = 28 * (player.hp/100.0);
+	for(int i = 2; i <= 3; ++i) {
 		for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + hp_pixel; ++j) {
 			mvaddch(i, j, '.' | COLOR_PAIR(100));
 		}
-		for(int j = VIEW_WIDTH + 2 + hp_pixel; j < VIEW_WIDTH + 2 + 30; ++j) {
+		for(int j = VIEW_WIDTH + 2 + hp_pixel; j < VIEW_WIDTH + 2 + 28; ++j) {
             mvaddch(i, j, '.' | COLOR_PAIR(1));
         }
 	}
 	
+	int daynight_pixel = 28 * ((game_time%DAY_UNIT)/(double)DAY_UNIT);
+    for(int i = 5; i <= 5; ++i) {
+        if(is_day) {
+			for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + daynight_pixel; ++j) {
+            	mvaddch(i, j, '.' | COLOR_PAIR(105));
+        	}
+        }
+		else {
+			for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + daynight_pixel; ++j) {
+                mvaddch(i, j, '.' | COLOR_PAIR(106));
+            }
+		}
+
+		for(int j = VIEW_WIDTH + 2 + daynight_pixel; j < VIEW_WIDTH + 2 + 28; ++j) {
+            mvaddch(i, j, '.' | COLOR_PAIR(1));
+        }
+    }
+
 	//아이템칸
 	for(int i = 7; i <= 10; ++i) {
 		for(int j = 0; j <= 7; j++) {
@@ -1103,15 +1124,15 @@ void game_UI() {
 		
 
 		for(int j = 0; j <= 7; j++) {
-			mvaddch(i, VIEW_WIDTH + j + 2 + 11, '.' | COLOR_PAIR(1));
+			mvaddch(i, VIEW_WIDTH + j + 2 + 10, '.' | COLOR_PAIR(1));
 		}
-		mvaddch(10, VIEW_WIDTH + 2 + 6 + 11, (char)(item.injection / 10 + '0') | COLOR_PAIR(102));
-		mvaddch(10, VIEW_WIDTH + 2 + 7 + 11, (char)(item.injection % 10 + '0') | COLOR_PAIR(102));
+		mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)(item.injection / 10 + '0') | COLOR_PAIR(102));
+		mvaddch(10, VIEW_WIDTH + 2 + 7 + 10, (char)(item.injection % 10 + '0') | COLOR_PAIR(102));
 		for(int j = 0; j <= 7; j++) {
-			mvaddch(i, VIEW_WIDTH + j + 2 + 22, '.' | COLOR_PAIR(1));
+			mvaddch(i, VIEW_WIDTH + j + 2 + 20, '.' | COLOR_PAIR(1));
 		}	
-		mvaddch(10, VIEW_WIDTH + 2 + 6 + 22, (char)(item.packet / 10 + '0') | COLOR_PAIR(102));
-		mvaddch(10, VIEW_WIDTH + 2 + 7 + 22, (char)(item.packet % 10 + '0') | COLOR_PAIR(102));
+		mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)(item.packet / 10 + '0') | COLOR_PAIR(102));
+		mvaddch(10, VIEW_WIDTH + 2 + 7 + 20, (char)(item.packet % 10 + '0') | COLOR_PAIR(102));
 	}
 
 	//모은 백신 조각
@@ -1124,13 +1145,13 @@ void game_UI() {
 		if(!item.vac[i]) {
 			for(int j = 0; j < 14; ++j) {
 				if(vac_list_a[i][j] == 0) break;
-				mvaddch(vac_list_a[i][j], VIEW_WIDTH + 3 + vac_list_b[i][j] + i * 6, '.' | COLOR_PAIR(1));
+				mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, '.' | COLOR_PAIR(1));
 			}
 		}
 		else {
 			for(int j = 0; j < 14; ++j) {
 				if(vac_list_a[i][j] == 0) break;
-				mvaddch(vac_list_a[i][j], VIEW_WIDTH + 3 + vac_list_b[i][j] + i * 6, '.' | COLOR_PAIR(6));
+				mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, '.' | COLOR_PAIR(6));
 			}
 		}
 	}
@@ -1308,4 +1329,3 @@ void use_item(int item_num) {
         }
     }
 }
-
