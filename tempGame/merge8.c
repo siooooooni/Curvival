@@ -219,7 +219,7 @@ int main() {
     curs_set(0);
 	
 	//시야 안 - 낮 (0~)
-	init_pair(PLAYER_KEY, 20, 17); //PLAYER
+	init_pair(PLAYER_KEY, COLOR_BLUE, COLOR_GREEN); //PLAYER: 파란 글자, 초록 배경
 	init_pair(ZOMBIE_KEY, 88, 89); //ZOMBIE
 	init_pair(FZOMBIE_KEY, 126, 128); //FZOMBIE
 	init_pair(ITEM_KEY, 184, 229); //ITEM
@@ -379,9 +379,9 @@ int main() {
             }
 
 
-            map[player.point.y][player.point.x] = GROUND | COLOR_PAIR(1);
+            //map[player.point.y][player.point.x] = GROUND | COLOR_PAIR(1);
             HumanMove(&player, key);
-            map[player.point.y][player.point.x] =  PLAYER | COLOR_PAIR(3) | A_BOLD;
+            //map[player.point.y][player.point.x] =  PLAYER | COLOR_PAIR(3) | A_BOLD;
         }
 
         //좀비 움직이는 함수
@@ -583,46 +583,48 @@ void draw_view_map(chtype map[MAP_HEIGHT][MAP_WIDTH], human player){
     int y = 0, x = 0;
     for (int i = startPoint.y; i <= endPoint.y; ++i) {
         for (int j = startPoint.x; j <= endPoint.x; ++j) {
-            char c = map[i][j] & A_CHARTEXT;
-			
-			if(is_day) {
-				switch(c) {
-					case CARPET : mvaddch(y, x, CARPET | COLOR_PAIR(CARPET_KEY + 50)); break;
-					case GROUND : mvaddch(y, x, GROUND | COLOR_PAIR(GROUND_KEY + 50)); break;
-					case SAND : mvaddch(y, x, SAND | COLOR_PAIR(SAND_KEY + 50)); break;
-					case LAWN : mvaddch(y, x, LAWN | COLOR_PAIR(LAWN_KEY + 50)); break;
-					case MOUNTAIN : mvaddch(y, x, MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY + 50)); break;
-					case WALL : mvaddch(y, x, WALL | COLOR_PAIR(WALL_KEY + 50)); break;
-					case CORNER : mvaddch(y, x, CORNER | COLOR_PAIR(CORNER_KEY + 50)); break;
-					case GRASS : mvaddch(y, x, GRASS | COLOR_PAIR(GRASS_KEY + 50)); break;
-					case DEAD_GRASS : mvaddch(y, x, DEAD_GRASS | COLOR_PAIR(DEAD_GRASS_KEY + 50)); break;
-					case WATER : mvaddch(y, x, WATER | COLOR_PAIR(WATER_KEY + 50)); break;
-					case ROCK : mvaddch(y, x, ROCK | COLOR_PAIR(ROCK_KEY + 50)); break;
-				}
-			}
-			else {
-                switch(c) {
-                    case CARPET : mvaddch(y, x, CARPET | COLOR_PAIR(CARPET_KEY + 150)); break;
-                    case GROUND : mvaddch(y, x, GROUND | COLOR_PAIR(GROUND_KEY + 150)); break;
-                    case SAND : mvaddch(y, x, SAND | COLOR_PAIR(SAND_KEY + 150)); break;
-                    case LAWN : mvaddch(y, x, LAWN | COLOR_PAIR(LAWN_KEY + 150)); break;
-                    case MOUNTAIN : mvaddch(y, x, MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY + 150)); break;
-                    case WALL : mvaddch(y, x, WALL | COLOR_PAIR(WALL_KEY + 150)); break;
-                    case CORNER : mvaddch(y, x, CORNER | COLOR_PAIR(CORNER_KEY + 150)); break;
-                    case GRASS : mvaddch(y, x, GRASS | COLOR_PAIR(GRASS_KEY + 150)); break;
-                    case DEAD_GRASS : mvaddch(y, x, DEAD_GRASS | COLOR_PAIR(DEAD_GRASS_KEY + 150)); break;
-                    case WATER : mvaddch(y, x, WATER | COLOR_PAIR(WATER_KEY + 150)); break;
-                    case ROCK : mvaddch(y, x, ROCK | COLOR_PAIR(ROCK_KEY + 150)); break;
+            // 플레이어 위치면 플레이어만 출력
+            if (i == player.point.y && j == player.point.x) {
+                mvaddch(y, x, '8' | COLOR_PAIR(PLAYER_KEY) | A_BOLD);
+            } else {
+                char c = map[i][j] & A_CHARTEXT;
+                if(is_day) {
+                    switch(c) {
+                        case CARPET : mvaddch(y, x, CARPET | COLOR_PAIR(CARPET_KEY + 50)); break;
+                        case GROUND : mvaddch(y, x, GROUND | COLOR_PAIR(GROUND_KEY + 50)); break;
+                        case SAND : mvaddch(y, x, SAND | COLOR_PAIR(SAND_KEY + 50)); break;
+                        case LAWN : mvaddch(y, x, LAWN | COLOR_PAIR(LAWN_KEY + 50)); break;
+                        case MOUNTAIN : mvaddch(y, x, MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY + 50)); break;
+                        case WALL : mvaddch(y, x, WALL | COLOR_PAIR(WALL_KEY + 50)); break;
+                        case CORNER : mvaddch(y, x, CORNER | COLOR_PAIR(CORNER_KEY + 50)); break;
+                        case GRASS : mvaddch(y, x, GRASS | COLOR_PAIR(GRASS_KEY + 50)); break;
+                        case DEAD_GRASS : mvaddch(y, x, DEAD_GRASS | COLOR_PAIR(DEAD_GRASS_KEY + 50)); break;
+                        case WATER : mvaddch(y, x, WATER | COLOR_PAIR(WATER_KEY + 50)); break;
+                        case ROCK : mvaddch(y, x, ROCK | COLOR_PAIR(ROCK_KEY + 50)); break;
+                    }
+                } else {
+                    switch(c) {
+                        case CARPET : mvaddch(y, x, CARPET | COLOR_PAIR(CARPET_KEY + 150)); break;
+                        case GROUND : mvaddch(y, x, GROUND | COLOR_PAIR(GROUND_KEY + 150)); break;
+                        case SAND : mvaddch(y, x, SAND | COLOR_PAIR(SAND_KEY + 150)); break;
+                        case LAWN : mvaddch(y, x, LAWN | COLOR_PAIR(LAWN_KEY + 150)); break;
+                        case MOUNTAIN : mvaddch(y, x, MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY + 150)); break;
+                        case WALL : mvaddch(y, x, WALL | COLOR_PAIR(WALL_KEY + 150)); break;
+                        case CORNER : mvaddch(y, x, CORNER | COLOR_PAIR(CORNER_KEY + 150)); break;
+                        case GRASS : mvaddch(y, x, GRASS | COLOR_PAIR(GRASS_KEY + 150)); break;
+                        case DEAD_GRASS : mvaddch(y, x, DEAD_GRASS | COLOR_PAIR(DEAD_GRASS_KEY + 150)); break;
+                        case WATER : mvaddch(y, x, WATER | COLOR_PAIR(WATER_KEY + 150)); break;
+                        case ROCK : mvaddch(y, x, ROCK | COLOR_PAIR(ROCK_KEY + 150)); break;
+                    }
                 }
             }
-            
-			++x;
+            ++x;
         }
         x = 0;
         ++y;
     }
 
-	mvaddch(player.point.y - startPoint.y, player.point.x - startPoint.x, map[player.point.y][player.point.x]);
+	//mvaddch(player.point.y - startPoint.y, player.point.x - startPoint.x, map[player.point.y][player.point.x]);
 
     // 시야 각도에 따라 ray casting 방식으로 시야를 그림
 	if(player.lookDir == UP) {
@@ -1088,26 +1090,28 @@ void game_UI() {
 	//DAYNNIGHT BAR
 	mvprintw(4, VIEW_WIDTH + 2, "DAY & NIGHT");
 
+	// HP 바 색상: 채워진 부분(빨간색), 빈 부분(회색)
 	int hp_pixel = 28 * (player.hp/100.0);
 	for(int i = 2; i <= 3; ++i) {
 		for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + hp_pixel; ++j) {
-			mvaddch(i, j, '.' | COLOR_PAIR(200+1));
+			mvaddch(i, j, ' ' | COLOR_PAIR(200+1)); // 빨간색(채워진 부분)
 		}
 		for(int j = VIEW_WIDTH + 2 + hp_pixel; j < VIEW_WIDTH + 2 + 28; ++j) {
-            mvaddch(i, j, '.' | COLOR_PAIR(CARPET_KEY));
+            mvaddch(i, j, ' ' | COLOR_PAIR(200+2)); // 회색(빈 부분)
         }
 	}
 	
+	// DAY&NIGHT 바 색상: 낮(노란색), 밤(파란색), 빈 부분(회색)
 	int daynight_pixel = 28 * ((game_time%DAY_UNIT)/(double)DAY_UNIT);
     for(int i = 5; i <= 5; ++i) {
         if(is_day) {
 			for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + daynight_pixel; ++j) {
-            	mvaddch(i, j, '.' | COLOR_PAIR(200+6));
+            	mvaddch(i, j, ' ' | COLOR_PAIR(200+6)); // 노란색(낮)
         	}
         }
 		else {
 			for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + daynight_pixel; ++j) {
-                mvaddch(i, j, '.' | COLOR_PAIR(200+7));
+                mvaddch(i, j, ' ' | COLOR_PAIR(200+7)); // 파란색(밤)
             }
 		}
 
@@ -1115,66 +1119,61 @@ void game_UI() {
             mvaddch(i, j, '.' | COLOR_PAIR(CARPET_KEY));
         }
     }
-	/*
 	//아이템칸
 	for(int i = 7; i <= 10; ++i) {
 		for(int j = 0; j <= 7; j++) {
-			mvaddch(i, VIEW_WIDTH + j + 2, '.' | COLOR_PAIR(CARPET_KEY));
+			mvaddch(i, VIEW_WIDTH + j + 2, ' ' | COLOR_PAIR(200+2)); // 진한 회색 배경
 		}
 
-		mvaddch(7, VIEW_WIDTH + 2 + 1, '_' | COLOR_PAIR(104));
-		mvaddch(7, VIEW_WIDTH + 2 + 6, '_' | COLOR_PAIR(104));
-		for(int j = 0; j <= 6; ++j) mvaddch(8, VIEW_WIDTH + 2 + j, GUN);
-		mvaddch(8, VIEW_WIDTH + 2 + 7, 'P' | COLOR_PAIR(103));
+		mvaddch(7, VIEW_WIDTH + 2 + 1, '_' | COLOR_PAIR(200+3)); // 밝은 회색 테두리
+		mvaddch(7, VIEW_WIDTH + 2 + 6, '_' | COLOR_PAIR(200+3));
+		for(int j = 0; j <= 6; ++j) mvaddch(8, VIEW_WIDTH + 2 + j, GUN | COLOR_PAIR(200+4)); // 파란색 총알
+		mvaddch(8, VIEW_WIDTH + 2 + 7, 'P' | COLOR_PAIR(103)); // 파란색 아이콘
 
-		mvaddch(9, VIEW_WIDTH + 2, '/' | COLOR_PAIR(104));
-		mvaddch(9, VIEW_WIDTH + 2 + 4, '/' | COLOR_PAIR(104));
-		mvaddch(10, VIEW_WIDTH + 2 + 2, '/' | COLOR_PAIR(104));
+		mvaddch(9, VIEW_WIDTH + 2, '/' | COLOR_PAIR(200+3));
+		mvaddch(9, VIEW_WIDTH + 2 + 4, '/' | COLOR_PAIR(200+3));
+		mvaddch(10, VIEW_WIDTH + 2 + 2, '/' | COLOR_PAIR(200+3));
 
-		mvaddch(9, VIEW_WIDTH + 2 + 1, GUN);
-		mvaddch(9, VIEW_WIDTH + 2 + 2, GUN);
-		mvaddch(10, VIEW_WIDTH + 2, GUN);
-		mvaddch(10, VIEW_WIDTH + 2 + 1, GUN);
+		mvaddch(9, VIEW_WIDTH + 2 + 1, GUN | COLOR_PAIR(200+5));
+		mvaddch(9, VIEW_WIDTH + 2 + 2, GUN | COLOR_PAIR(200+5));
+		mvaddch(10, VIEW_WIDTH + 2, GUN | COLOR_PAIR(200+5));
+		mvaddch(10, VIEW_WIDTH + 2 + 1, GUN | COLOR_PAIR(200+5));
 
 		mvaddch(9, VIEW_WIDTH + 2 + 3, 'Z' | COLOR_PAIR(103));
 		
-		mvaddch(10, VIEW_WIDTH + 2 + 6, (char)(item.gun / 10 + '0') | COLOR_PAIR(102));
-		mvaddch(10, VIEW_WIDTH + 2 + 7, (char)(item.gun % 10 + '0') | COLOR_PAIR(102));
+		mvaddch(10, VIEW_WIDTH + 2 + 6, (char)(item.gun / 10 + '0') | COLOR_PAIR(200+3));
+		mvaddch(10, VIEW_WIDTH + 2 + 7, (char)(item.gun % 10 + '0') | COLOR_PAIR(200+3));
 		
-
 		for(int j = 0; j <= 7; j++) {
-			mvaddch(i, VIEW_WIDTH + j + 2 + 10, '.' | COLOR_PAIR(1));
+			mvaddch(i, VIEW_WIDTH + j + 2 + 10, ' ' | COLOR_PAIR(200+2)); // 진한 회색 배경
 		}
-		mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)(item.injection / 10 + '0') | COLOR_PAIR(102));
-		mvaddch(10, VIEW_WIDTH + 2 + 7 + 10, (char)(item.injection % 10 + '0') | COLOR_PAIR(102));
+		mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)(item.injection / 10 + '0') | COLOR_PAIR(200+3));
+		mvaddch(10, VIEW_WIDTH + 2 + 7 + 10, (char)(item.injection % 10 + '0') | COLOR_PAIR(200+3));
 		for(int j = 0; j <= 7; j++) {
-			mvaddch(i, VIEW_WIDTH + j + 2 + 20, '.' | COLOR_PAIR(1));
-		}	
-		mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)(item.packet / 10 + '0') | COLOR_PAIR(102));
-		mvaddch(10, VIEW_WIDTH + 2 + 7 + 20, (char)(item.packet % 10 + '0') | COLOR_PAIR(102));
+			mvaddch(i, VIEW_WIDTH + j + 2 + 20, ' ' | COLOR_PAIR(200+2)); // 진한 회색 배경
+		}
+		mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)(item.packet / 10 + '0') | COLOR_PAIR(200+3));
+		mvaddch(10, VIEW_WIDTH + 2 + 7 + 20, (char)(item.packet % 10 + '0') | COLOR_PAIR(200+3));
 	}
 	
 	//모은 백신 조각
-
-	int	vac_list_a[5][14] = { {13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 17},{13, 13, 13, 13, 14, 15, 15, 15, 15, 16, 17, 17, 17, 17},{13, 13, 13, 14, 14, 15, 15, 15, 16, 16, 17, 17, 17},{13, 13, 14, 14, 15, 15, 16, 16, 17, 17},{13, 13, 14, 15, 15, 15, 16, 16, 17, 17} };
-	int	vac_list_b[5][14] = { {0, 1, 2, 0, 3, 0, 3, 0, 3, 0, 1, 2}, {0, 1, 2, 3, 0, 0, 1, 2, 3, 0, 1, 2, 3}, {0, 1, 2, 0, 3, 0, 1, 2, 0, 3, 0, 1, 2}, {0, 3, 0, 3, 0, 3, 0, 3, 1, 2}, {1, 2, 0, 0, 2, 3, 0, 3, 1, 2} };
-
+	int vac_list_a[5][14] = { {13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 17},{13, 13, 13, 13, 14, 15, 15, 15, 15, 16, 17, 17, 17, 17},{13, 13, 13, 14, 14, 15, 15, 15, 16, 16, 17, 17, 17},{13, 13, 14, 14, 15, 15, 16, 16, 17, 17},{13, 13, 14, 15, 15, 15, 16, 16, 17, 17} };
+	int vac_list_b[5][14] = { {0, 1, 2, 0, 3, 0, 3, 0, 3, 0, 1, 2}, {0, 1, 2, 3, 0, 0, 1, 2, 3, 0, 1, 2, 3}, {0, 1, 2, 0, 3, 0, 1, 2, 0, 3, 0, 1, 2}, {0, 3, 0, 3, 0, 3, 0, 3, 1, 2}, {1, 2, 0, 0, 2, 3, 0, 3, 1, 2} };
 
 	for(int i = 0; i < 5; ++i) {
 		if(!item.vac[i]) {
 			for(int j = 0; j < 14; ++j) {
 				if(vac_list_a[i][j] == 0) break;
-				mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, '.' | COLOR_PAIR(CARPET_KEY));
+				mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, ' ' | COLOR_PAIR(CARPET_KEY)); // 회색(획득 전)
 			}
 		}
 		else {
 			for(int j = 0; j < 14; ++j) {
 				if(vac_list_a[i][j] == 0) break;
-				mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, '.' | COLOR_PAIR(6));
+				mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, ' ' | COLOR_PAIR(6)); // 노란색(획득 후)
 			}
 		}
 	}
-	*/
 }
 
 void use_item(int item_num) {
