@@ -49,7 +49,7 @@
 #define ZOMBIE_NOIZE_UNIT 1.0 //소음 발생 단위
 #define ZOMBIE_GENERAL_SPEED 0.25 //일반적인 좀비 속도
 #define ZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도
-#define ZOMBIE_ACT_LIMIT 10.0 //좀비 분노 한계
+#define ZOMBIE_ACT_LIMIT 12.0 //좀비 분노 한계
 #define ZOMBIE_DAMAGE 10
 #define ZOMBIE_HP 4 //좀비 HP
 
@@ -59,13 +59,16 @@
 #define FZOMBIE_NOIZE_UNIT 1.0 //소음 발생 단위     
 #define FZOMBIE_GENERAL_SPEED 0.15 //일반적인 좀비 속도         
 #define FZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도    
-#define FZOMBIE_ACT_LIMIT 11.0 //좀비 분노 한계
+#define FZOMBIE_ACT_LIMIT 12.0 //좀비 분노 한계
 #define FZOMBIE_DAMAGE 15
 #define FZOMBIE_HP 3 //빠른 좀비 HP
 
 #define GUN ('#' | COLOR_PAIR(103)) //총 모양
 #define INJECTION_RANGE 5 //인젝션 공격 범위 5x5가 기본
 #define DAY_UNIT 25 //하루 시간
+
+#define GUN_NOIZE_UNIT 2.0
+#define INJECTION_NOIZE_UNIT 2.0
 
 typedef enum {
 	PLAYER = '8',
@@ -1153,7 +1156,28 @@ void you_die() {
 }
 
 void game_UI() {
-    //HP바
+    //nozie바
+	int noizeValPixel = VIEW_HEIGHT * ((double)(2+zombie_act_distance-ZOMBIE_ACT_BASE_DISTANCE)/ZOMBIE_ACT_LIMIT);
+	for(int i = 0; i < VIEW_HEIGHT - noizeValPixel; i++) {
+		mvaddch(i, VIEW_WIDTH, '-' | COLOR_PAIR(200+4));
+	}
+	if(noizeValPixel > VIEW_HEIGHT * 0.6) {
+		for(int i = VIEW_HEIGHT - noizeValPixel; i < VIEW_HEIGHT; i++) {    
+			mvaddch(i, VIEW_WIDTH, '-' | COLOR_PAIR(200+1));
+		}
+	}
+	else if(noizeValPixel > VIEW_HEIGHT * 0.3) {
+        for(int i = VIEW_HEIGHT - noizeValPixel; i < VIEW_HEIGHT; i++) {
+            mvaddch(i, VIEW_WIDTH, '-' | COLOR_PAIR(200+3));
+        }
+    }
+	else {
+        for(int i = VIEW_HEIGHT - noizeValPixel; i < VIEW_HEIGHT; i++) {
+            mvaddch(i, VIEW_WIDTH, '-' | COLOR_PAIR(200+2));
+        }
+    }
+
+	//HP바
     mvprintw(1, VIEW_WIDTH + 2, "HP");
     //DAYNNIGHT BAR
     mvprintw(4, VIEW_WIDTH + 2, "DAY & NIGHT");
@@ -1255,7 +1279,14 @@ void game_UI() {
 void use_item(int item_num) {
     if(item_num == 'j') {
         if(item.gun >= 1) { 
-            // 총알 1개 사용
+            if(zombie_act_distance <= ZOMBIE_ACT_LIMIT) {  
+				zombie_act_distance += GUN_NOIZE_UNIT;   
+			} 
+			if(fzombie_act_distance <= FZOMBIE_ACT_LIMIT) {
+                fzombie_act_distance += GUN_NOIZE_UNIT;
+            }
+
+			// 총알 1개 사용
             --item.gun;
 
             // 플레이어가 바라보는 방향으로 10칸 탐색
@@ -1330,6 +1361,13 @@ void use_item(int item_num) {
     }
     else if(item_num == 'k') {
         if(item.injection >= 1) {
+			if(zombie_act_distance <= ZOMBIE_ACT_LIMIT) {       
+				zombie_act_distance += INJECTION_NOIZE_UNIT;     
+			}
+			if(fzombie_act_distance <= FZOMBIE_ACT_LIMIT) {
+                fzombie_act_distance += INJECTION_NOIZE_UNIT;
+            }
+
             --item.injection;
 			int px = player.point.x;
 			int py = player.point.y;
