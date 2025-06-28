@@ -7,18 +7,17 @@
 #include <math.h>
 #include "story.h"
 
-#define GAME_UI_WIDTH 34 //게임 ui 크기
 #define MAP_HEIGHT 150 //맵 크기
-#define MAP_WIDTH 300+GAME_UI_WIDTH
+#define MAP_WIDTH 300
 #define HOUSE_COUNT 12 //집 개수
 
-#define ZOMBIE_MAX 200 //좀비 개수 최소~최대
-#define ZOMBIE_MIN 150
+#define ZOMBIE_MAX 120 //좀비 개수 최소~최대
+#define ZOMBIE_MIN 100
 
-#define FZOMBIE_MAX 100 //빠른 좀비 개수 최소~최대 
-#define FZOMBIE_MIN 80
+#define FZOMBIE_MAX 120 //빠른 좀비 개수 최소~최대 
+#define FZOMBIE_MIN 100
 
-#define ITEM_COUNT 100 //아이템 개수
+#define ITEM_COUNT 150 //아이템 개수
 #define VACCINE_COUNT 5 //각각 DEBUG 글자로 할 예정
 #define TREE_COUNT 30 //트리 개수 30개
 #define VIEW_HEIGHT 21 //플레이어 시야 크기
@@ -52,7 +51,7 @@
 #define ZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도
 #define ZOMBIE_ACT_LIMIT 10.0 //좀비 분노 한계
 #define ZOMBIE_DAMAGE 10
-#define ZOMBIE_HP 3 //좀비 HP
+#define ZOMBIE_HP 4 //좀비 HP
 
 #define FZOMBIE_ACT_TIME 20 //좀비 분노 지속 시간  
 #define FZOMBIE_ACT_ADJ 5 //좀비 분노 조절값    
@@ -62,11 +61,11 @@
 #define FZOMBIE_CALM_DOWN_VAL 2.0 //소음이 줄어드는 속도    
 #define FZOMBIE_ACT_LIMIT 11.0 //좀비 분노 한계
 #define FZOMBIE_DAMAGE 15
-#define FZOMBIE_HP 2 //빠른 좀비 HP
+#define FZOMBIE_HP 3 //빠른 좀비 HP
 
 #define GUN ('#' | COLOR_PAIR(103)) //총 모양
 #define INJECTION_RANGE 5 //인젝션 공격 범위 5x5가 기본
-#define DAY_UNIT 10 //하루 시간
+#define DAY_UNIT 25 //하루 시간
 
 typedef enum {
 	PLAYER = '8',
@@ -83,7 +82,7 @@ typedef enum {
 	WALL = '#',
 	CORNER = 'X',
 	GRASS = '*',
-	DEAD_GRASS = 'y',
+	DEAD_GRASS = 'Y',
 
 	WATER = '~',
 	ROCK = '@',
@@ -151,14 +150,6 @@ typedef struct {
     int hp;
 	int actAmt;
 } zombie_t;
-/*
-//아이템 구조체
-typedef struct {
-    int injection; //광범위 공격 : 1번
-    int pointer; //총 : 2번
-    int patch; //포션 : 3번
-} item_list;
-item_list itemList = {0,0,0};*/
 typedef struct {
 	int gun; //총알 수
 	int vac[5]; //백신 D E B U G 배열 있으면 1, 없으면 0
@@ -168,7 +159,7 @@ typedef struct {
 } UI_item;
 UI_item item = {.gun = 30, .vac = {0}, .injection = 10, .packet = 1000,.UI_hp = 100};
 chtype map[MAP_HEIGHT][MAP_WIDTH];
-human player = {.role = PLAYER, .point = {10, 10}, .hp = 100, .lookDir = RIGHT};
+human player = {.role = PLAYER, .point = {21, 267}, .hp = 100, .lookDir = RIGHT};
 
 zombie_t zombies[ZOMBIE_MAX];
 int zombie_count = 0;
@@ -192,9 +183,7 @@ bool is_day = true;
 void init_map_with_txt();
 void swap_int(int* a, int* b); //정수값 swap
 void init_UI(); //시작 UI
-void init_map(chtype map[MAP_HEIGHT][MAP_WIDTH]); //맵 초기화
-void make_vaccine(chtype map[MAP_HEIGHT][MAP_WIDTH], char a); //백신 생성
-void draw_building(chtype map[MAP_HEIGHT][MAP_WIDTH], Rect b, int color_pair); //건물 그리기
+void spawn_object(chtype map[MAP_HEIGHT][MAP_WIDTH]); //맵 초기화
 void draw_view_map(chtype map[MAP_HEIGHT][MAP_WIDTH], human player); //플레이어 시야 그리기
 void move_zombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint); //좀비 이동
 void HumanMove(human *player, int way); //플레이어 이동
@@ -219,24 +208,24 @@ int main() {
     curs_set(0);
 	
 	//시야 안 - 낮 (0~)
-	init_pair(PLAYER_KEY, COLOR_BLUE, COLOR_GREEN); //PLAYER: 파란 글자, 초록 배경
-	init_pair(ZOMBIE_KEY, 88, 89); //ZOMBIE
-	init_pair(FZOMBIE_KEY, 126, 128); //FZOMBIE
-	init_pair(ITEM_KEY, 184, 229); //ITEM
+	init_pair(PLAYER_KEY, 15, 240); //PLAYER: 파란 글자, 초록 배경
+	init_pair(ZOMBIE_KEY, 88, 90); //ZOMBIE
+	init_pair(FZOMBIE_KEY, 126, 125); //FZOMBIE
+	init_pair(ITEM_KEY, 3, 11); //ITEM
 	init_pair(CARPET_KEY, 245, 245); //CARPET
-	init_pair(GROUND_KEY, 52, 52); //GROUND
-	init_pair(SAND_KEY, 137, 137); //SAND
-	init_pair(LAWN_KEY, 107, 107); //LAWN
+	init_pair(GROUND_KEY, 179, 179); //GROUND
+	init_pair(SAND_KEY, 229, 229); //SAND
+	init_pair(LAWN_KEY, 113, 113); //LAWN
 	init_pair(MOUNTAIN_KEY, 237, 237); //MOUNTAIN
-	init_pair(WALL_KEY, 251, 234); //WALL
+	init_pair(WALL_KEY, 255, 234); //WALL
 	init_pair(CORNER_KEY, 251, 234); //CORNER
-	init_pair(GRASS_KEY, 28, 22); //GRASS
-	init_pair(DEAD_GRASS_KEY, 95, 137); //DEAD_GRASS
-	init_pair(WATER_KEY, 45, 27); //WATER
+	init_pair(GRASS_KEY, 130, 28); //GRASS
+	init_pair(DEAD_GRASS_KEY, 130, 229); //DEAD_GRASS
+	init_pair(WATER_KEY, 39, 33); //WATER
 	init_pair(ROCK_KEY, 241, 236); //ROCK
-	init_pair(BULLET_CHAR_KEY, 200, 213); //BULLET_CHAR
-	init_pair(INJECTION_KEY, 46, 86); //INGECTION
-	init_pair(BACKSHIN_KEY, 232, 217); //백신
+	init_pair(BULLET_CHAR_KEY, 165, 91); //BULLET_CHAR
+	init_pair(INJECTION_KEY, 46, 22); //INGECTION
+	init_pair(BACKSHIN_KEY, 50, 41); //백신
 	init_pair(CRAZY_ZOMBIE_KEY, 9, 124); //CRAZY_ZOMBIE
 	init_pair(CRAZY_FZOMBIE_KEY, 165, 89); //CRAZY_FZOMBIE
 	
@@ -246,80 +235,78 @@ int main() {
     init_pair(50+FZOMBIE_KEY, 126, 128); //FZOMBIE
     init_pair(50+ITEM_KEY, 184, 229); //ITEM
     init_pair(50+CARPET_KEY, 239, 239); //CARPET
-    init_pair(50+GROUND_KEY, 16, 16); //GROUND
-    init_pair(50+SAND_KEY, 0, 0); //SAND
-    init_pair(50+LAWN_KEY, 0, 0); //LAWN
-    init_pair(50+MOUNTAIN_KEY, 0, 0); //MOUNTAIN
-    init_pair(50+WALL_KEY, 0, 0); //WALL
-    init_pair(50+CORNER_KEY, 0, 0); //CORNER
-    init_pair(50+GRASS_KEY, 0, 0); //GRASS
-    init_pair(50+DEAD_GRASS_KEY, 0, 0); //DEAD_GRASS
-    init_pair(50+WATER_KEY, 235, 235); //WATER
+    init_pair(50+GROUND_KEY, 94, 94); //GROUND
+    init_pair(50+SAND_KEY, 144, 144); //SAND
+    init_pair(50+LAWN_KEY, 70, 70); //LAWN
+    init_pair(50+MOUNTAIN_KEY, 235, 235); //MOUNTAIN
+    init_pair(50+WALL_KEY, 248, 234); //WALL
+    init_pair(50+CORNER_KEY, 248, 234); //CORNER
+    init_pair(50+GRASS_KEY, 28, 22); //GRASS
+    init_pair(50+DEAD_GRASS_KEY, 130, 144); //DEAD_GRASS
+    init_pair(50+WATER_KEY, 27, 26); //WATER
     init_pair(50+ROCK_KEY, 235, 235); //ROCK
-    init_pair(50+BULLET_CHAR_KEY, 0, 0); //BULLET_CHAR
-    init_pair(50+INJECTION_KEY, 0, 0); //INGECTION
+    init_pair(50+BULLET_CHAR_KEY, 165, 162); //BULLET_CHAR
+    init_pair(50+INJECTION_KEY, 46, 86); //INGECTION
     init_pair(50+BACKSHIN_KEY, 0, 0); //백신
     init_pair(50+CRAZY_ZOMBIE_KEY, 0, 0); //CRAZY_ZOMBIE
     init_pair(50+CRAZY_FZOMBIE_KEY, 0, 0); //CRAZY_FZOMBIE
-
+	
 	//시야 안 - 밤 (100~)
-	init_pair(100+PLAYER_KEY, 0, 0); //PLAYER
-    init_pair(100+ZOMBIE_KEY, 0, 0); //ZOMBIE
-    init_pair(100+FZOMBIE_KEY, 0, 0); //FZOMBIE
-    init_pair(100+ITEM_KEY, 0, 0); //ITEM
-    init_pair(100+CARPET_KEY, 0, 0); //CARPET
-    init_pair(100+GROUND_KEY, 0, 0); //GROUND
-    init_pair(100+SAND_KEY, 0, 0); //SAND
-    init_pair(100+LAWN_KEY, 0, 0); //LAWN
-    init_pair(100+MOUNTAIN_KEY, 0, 0); //MOUNTAIN
-    init_pair(100+WALL_KEY, 0, 0); //WALL
-    init_pair(100+CORNER_KEY, 0, 0); //CORNER
-    init_pair(100+GRASS_KEY, 0, 0); //GRASS
-    init_pair(100+DEAD_GRASS_KEY, 0, 0); //DEAD_GRASS
-    init_pair(100+WATER_KEY, 0, 0); //WATER
-    init_pair(100+ROCK_KEY, 0, 0); //ROCK
-    init_pair(100+BULLET_CHAR_KEY, 0, 0); //BULLET_CHAR
-    init_pair(100+INJECTION_KEY, 0, 0); //INGECTION
-    init_pair(100+BACKSHIN_KEY, 0, 0); //백신
-    init_pair(100+CRAZY_ZOMBIE_KEY, 0, 0); //CRAZY_ZOMBIE
-    init_pair(100+CRAZY_FZOMBIE_KEY, 0, 0); //CRAZY_FZOMBIE
+    init_pair(100+PLAYER_KEY, 255, 240); //PLAYER: 파란 글자, 초록 배경
+    init_pair(100+ZOMBIE_KEY, 88, 89); //ZOMBIE
+    init_pair(100+FZOMBIE_KEY, 126, 128); //FZOMBIE
+    init_pair(100+ITEM_KEY, 3, 11); //ITEM
+    init_pair(100+CARPET_KEY, 245, 245); //CARPET
+    init_pair(100+GROUND_KEY, 179, 179); //GROUND
+    init_pair(100+SAND_KEY, 229, 229); //SAND
+    init_pair(100+LAWN_KEY, 113, 113); //LAWN
+    init_pair(100+MOUNTAIN_KEY, 237, 237); //MOUNTAIN
+    init_pair(100+WALL_KEY, 255, 234); //WALL
+    init_pair(100+CORNER_KEY, 251, 234); //CORNER
+    init_pair(100+GRASS_KEY, 130, 28); //GRASS
+    init_pair(100+DEAD_GRASS_KEY, 130, 229); //DEAD_GRASS
+    init_pair(100+WATER_KEY, 39, 33); //WATER
+    init_pair(100+ROCK_KEY, 241, 236); //ROCK
+    init_pair(100+BULLET_CHAR_KEY, 165, 91); //BULLET_CHAR
+    init_pair(100+INJECTION_KEY, 46, 22); //INGECTION
+    init_pair(100+BACKSHIN_KEY, 50, 41); //백신
+    init_pair(100+CRAZY_ZOMBIE_KEY, 9, 124); //CRAZY_ZOMBIE
+    init_pair(100+CRAZY_FZOMBIE_KEY, 165, 89); //CRAZY_FZOMBIE
 
-	//시야 밖 - 밤 (150~)
-	init_pair(150+PLAYER_KEY, 0, 0); //PLAYER
-    init_pair(150+ZOMBIE_KEY, 0, 0); //ZOMBIE
-    init_pair(150+FZOMBIE_KEY, 0, 0); //FZOMBIE
-    init_pair(150+ITEM_KEY, 0, 0); //ITEM
-    init_pair(150+CARPET_KEY, 0, 0); //CARPET
-    init_pair(150+GROUND_KEY, 0, 0); //GROUND
-    init_pair(150+SAND_KEY, 0, 0); //SAND
-    init_pair(150+LAWN_KEY, 0, 0); //LAWN
-    init_pair(150+MOUNTAIN_KEY, 0, 0); //MOUNTAIN
-    init_pair(150+WALL_KEY, 0, 0); //WALL
-    init_pair(150+CORNER_KEY, 0, 0); //CORNER
-    init_pair(150+GRASS_KEY, 0, 0); //GRASS
-    init_pair(150+DEAD_GRASS_KEY, 0, 0); //DEAD_GRASS
-    init_pair(150+WATER_KEY, 0, 0); //WATER
-    init_pair(150+ROCK_KEY, 0, 0); //ROCK
-    init_pair(150+BULLET_CHAR_KEY, 0, 0); //BULLET_CHAR
-    init_pair(150+INJECTION_KEY, 0, 0); //INGECTION
+    //시야 밖 - 밤 (150~)
+    init_pair(150+PLAYER_KEY, 20, 17); //PLAYER
+    init_pair(150+ZOMBIE_KEY, 88, 89); //ZOMBIE
+    init_pair(150+FZOMBIE_KEY, 126, 128); //FZOMBIE
+    init_pair(150+ITEM_KEY, 184, 229); //ITEM
+    init_pair(150+CARPET_KEY, 237, 237); //CARPET
+    init_pair(150+GROUND_KEY, 94, 94); //GROUND
+    init_pair(150+SAND_KEY, 144, 144); //SAND
+    init_pair(150+LAWN_KEY, 22, 22); //LAWN
+    init_pair(150+MOUNTAIN_KEY, 235, 235); //MOUNTAIN
+    init_pair(150+WALL_KEY, 244, 232); //WALL
+    init_pair(150+CORNER_KEY, 244, 232); //CORNER
+    init_pair(150+GRASS_KEY, 28, 22); //GRASS
+    init_pair(150+DEAD_GRASS_KEY, 130, 144); //DEAD_GRASS
+    init_pair(150+WATER_KEY, 20, 19); //WATER
+    init_pair(150+ROCK_KEY, 236, 232); //ROCK
+    init_pair(150+BULLET_CHAR_KEY, 165, 162); //BULLET_CHAR
+    init_pair(150+INJECTION_KEY, 46, 86); //INGECTION
     init_pair(150+BACKSHIN_KEY, 0, 0); //백신
     init_pair(150+CRAZY_ZOMBIE_KEY, 0, 0); //CRAZY_ZOMBIE
     init_pair(150+CRAZY_FZOMBIE_KEY, 0, 0); //CRAZY_FZOMBIE
 
 	//UI (200~)
-	init_pair(200+1, COLOR_RED, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
-    init_pair(200+2, 52, 52); // 검붉은 글자, 검붉은 배경 : HP 없는 부분
-    init_pair(200+3, 15, 242); // 흰색 글자, 회색 배경 : 아이템 개수 표현
-    init_pair(200+4, 60, 239); // 어두운 파란색 글자, 약간 파란 회색 배경103 : 총 픽셀 표현
-    init_pair(200+5, 60, 245); // 어두운 파란색 글자, 회색 배경245 : 총 픽셀 표현
-	init_pair(200+6, 226, 226); //daynight의 day
-	init_pair(200+7, 235, 235); //daynight의 night
+	init_pair(200+1, COLOR_BLACK, COLOR_RED); // 빨간색 글자, 빨간색 배경 : HP
+    init_pair(200+2, COLOR_BLACK, COLOR_GREEN);
+	init_pair(200+3, COLOR_BLACK, 226);
+	init_pair(200+4, COLOR_BLACK, 245);
+	init_pair(200+5, COLOR_BLACK, 238);
+	init_pair(200+6, COLOR_BLACK, 14);
 
 	//시작하고 출력
     init_map_with_txt();
-	//init_map(map);
-    //make_obstacle(map); // 장애물 생성
-    
+   	spawn_object(map);
+
 	//좀비 시간
 	struct timespec last_zombie_move, now; //초+나노초로 시간 저장하는 구조체
     clock_gettime(CLOCK_MONOTONIC, &last_zombie_move); //현재 시간 구조체에 저장
@@ -356,10 +343,10 @@ int main() {
         item.UI_hp = player.hp; //UI에 hp 업데이트
         if (player.hp <= 0) you_die();
 		
-		mvprintw(24, 0, "noize val: %lf\nzombie speed: %lf\n", zombie_act_distance, zombie_speed);
-        mvprintw(27, 0, "hp: %d\ngun : %d\ninjection : %d\npacket : %d", item.UI_hp,item.gun,item.injection,item.packet);
+		//mvprintw(24, 0, "noize val: %lf\nzombie speed: %lf\n", zombie_act_distance, zombie_speed);
+        //mvprintw(27, 0, "hp: %d\ngun : %d\ninjection : %d\npacket : %d", item.UI_hp,item.gun,item.injection,item.packet);
 
-		mvprintw(22, 0, "game_time(change day&night per %d): %d, is_day: %d\n", DAY_UNIT, game_time, is_day);	
+		//mvprintw(22, 0, "game_time(change day&night per %d): %d, is_day: %d\n", DAY_UNIT, game_time, is_day);	
 
 		refresh();
         bool isTouched = check_touch();
@@ -378,11 +365,17 @@ int main() {
                 fzombie_act_distance += FZOMBIE_NOIZE_UNIT;
             }
 
-
-            //map[player.point.y][player.point.x] = GROUND | COLOR_PAIR(1);
+			int pastY = player.point.y, pastX = player.point.x;
             HumanMove(&player, key);
-            //map[player.point.y][player.point.x] =  PLAYER | COLOR_PAIR(3) | A_BOLD;
-        }
+            switch(map[player.point.y][player.point.x] & A_CHARTEXT) {
+                case CARPET : map[pastY][pastX] = CARPET | COLOR_PAIR(CARPET_KEY); break;
+                case GROUND : map[pastY][pastX] = GROUND | COLOR_PAIR(GROUND_KEY); break;
+                case SAND : map[pastY][pastX] = SAND | COLOR_PAIR(SAND_KEY); break;
+                case LAWN : map[pastY][pastX] = LAWN | COLOR_PAIR(LAWN_KEY); break;
+                case MOUNTAIN : map[pastY][pastX] = MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY); break;
+            }
+            map[player.point.y][player.point.x] =  PLAYER | COLOR_PAIR(PLAYER_KEY) | A_BOLD;
+		}
 
         //좀비 움직이는 함수
         clock_gettime(CLOCK_MONOTONIC, &now);
@@ -484,7 +477,12 @@ void init_map_with_txt() {
 				case DEAD_GRASS : map[i][j] = DEAD_GRASS | COLOR_PAIR(DEAD_GRASS_KEY); break;
 				case WATER : map[i][j] = WATER | COLOR_PAIR(WATER_KEY); break;
 				case ROCK : map[i][j] = ROCK | COLOR_PAIR(ROCK_KEY); break;
-                default:
+                case 'D' : map[i][j] = 'D' | COLOR_PAIR(BACKSHIN_KEY); break;
+				case 'E' : map[i][j] = 'E' | COLOR_PAIR(BACKSHIN_KEY); break;
+				case 'B' : map[i][j] = 'B' | COLOR_PAIR(BACKSHIN_KEY); break;
+				case 'U' : map[i][j] = 'U' | COLOR_PAIR(BACKSHIN_KEY); break;
+				case 'G' : map[i][j] = 'G' | COLOR_PAIR(BACKSHIN_KEY); break;
+				default:
                     map[i][j] = GROUND | COLOR_PAIR(GROUND_KEY); break;
 			}
         }
@@ -577,6 +575,76 @@ void HumanMove(human *player, int way) {
         }
     }
 }
+
+void spawn_object(chtype map[MAP_HEIGHT][MAP_WIDTH]) {
+    //좀비 랜덤 생성 : ZOMBIE_MIN ~ ZOMBIE_MAX
+    int zombieCount = rand() % (ZOMBIE_MAX - ZOMBIE_MIN + 1) + ZOMBIE_MIN;
+    zombie_count = zombieCount;
+    int zidx = 0;
+    for (int z=0;z<zombieCount;++z) {
+        int y,x;
+        do {
+            y = rand() % (MAP_HEIGHT - 2) + 1; //벽은 제외
+            x = rand() % (MAP_WIDTH  - 2) + 1;
+        } while (
+            (map[y][x] & A_CHARTEXT) != CARPET &&
+            (map[y][x] & A_CHARTEXT) != GROUND &&
+            (map[y][x] & A_CHARTEXT) != SAND &&
+            (map[y][x] & A_CHARTEXT) != LAWN &&
+            (map[y][x] & A_CHARTEXT) != MOUNTAIN
+        ); //빈 공간이어야함
+        map[y][x] = ZOMBIE | COLOR_PAIR(ZOMBIE_KEY);
+        //좀비 구조체 배열에 좀비 좌표 저장
+        zombies[zidx].point.y = y;
+        zombies[zidx].point.x = x;
+        zombies[zidx].alive = 1;
+        zombies[zidx].hp = ZOMBIE_HP;
+        zombies[zidx].actAmt = 0;
+        zidx++; //인덱스 증가
+    }
+
+    int fzombieCount = rand() % (FZOMBIE_MAX - FZOMBIE_MIN + 1) + FZOMBIE_MIN;
+    fzombie_count = fzombieCount;
+    int fzidx = 0;
+    for (int z=0;z<fzombieCount;++z) {
+        int y,x;
+        do {
+            y = rand() % (MAP_HEIGHT - 2) + 1; //벽은 제외
+            x = rand() % (MAP_WIDTH  - 2) + 1;
+        } while (
+            (map[y][x] & A_CHARTEXT) != CARPET &&
+            (map[y][x] & A_CHARTEXT) != GROUND &&
+            (map[y][x] & A_CHARTEXT) != SAND &&
+            (map[y][x] & A_CHARTEXT) != LAWN &&
+            (map[y][x] & A_CHARTEXT) != MOUNTAIN
+        ); //빈 공간이어야함
+        map[y][x] = FZOMBIE | COLOR_PAIR(FZOMBIE_KEY);
+        //좀비 구조체 배열에 좀비 좌표 저장
+        fzombies[fzidx].point.y = y;
+        fzombies[fzidx].point.x = x;
+        fzombies[fzidx].alive = 1;
+        fzombies[fzidx].hp = FZOMBIE_HP;
+        fzombies[fzidx].actAmt = 0;
+        fzidx++; //인덱스 증가
+    }
+    //아이템 랜덤 생성 : ITEM_COUNT
+    for (int it=0;it<ITEM_COUNT;++it) {
+        int y,x;
+        do {
+            y = rand() % (MAP_HEIGHT - 2) + 1;
+            x = rand() % (MAP_WIDTH  - 2) + 1;
+        } while (
+            (map[y][x] & A_CHARTEXT) != CARPET &&
+            (map[y][x] & A_CHARTEXT) != GROUND &&
+            (map[y][x] & A_CHARTEXT) != SAND &&
+            (map[y][x] & A_CHARTEXT) != LAWN &&
+            (map[y][x] & A_CHARTEXT) != MOUNTAIN
+        );
+        map[y][x] = ITEM | COLOR_PAIR(ITEM_KEY) | A_BLINK;
+    }
+    map[player.point.y][player.point.x] = PLAYER | COLOR_PAIR(PLAYER_KEY) | A_BOLD; //플레이어
+}
+
 //플레이어 시야 그리기 (ray casting 방식)
 void draw_view_map(chtype map[MAP_HEIGHT][MAP_WIDTH], human player){
     // 시야가 닿지 않는 곳은 어둡게 처리
@@ -886,18 +954,18 @@ void move_zombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint) {
         if (player.point.y == ny && player.point.x == nx) can_move = 0;
         //이동 가능하면 이동
         if (can_move) {
-			switch(map[pastY][pastX] & A_CHARTEXT) {  
-				case CARPET : map[zombies[i].point.y][zombies[i].point.x] = CARPET | COLOR_PAIR(CARPET_KEY); break;   
-				case GROUND : map[zombies[i].point.y][zombies[i].point.x] = GROUND | COLOR_PAIR(GROUND_KEY); break;     
-				case SAND : map[zombies[i].point.y][zombies[i].point.x] = SAND | COLOR_PAIR(SAND_KEY); break;
-				case LAWN : map[zombies[i].point.y][zombies[i].point.x] = LAWN | COLOR_PAIR(LAWN_KEY); break;      
-				case MOUNTAIN : map[zombies[i].point.y][zombies[i].point.x] = MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY); break;
-			}
-            
+           	switch(map[ny][nx] & A_CHARTEXT) {
+                case CARPET : map[pastY][pastX] = CARPET | COLOR_PAIR(CARPET_KEY); break;
+                case GROUND : map[pastY][pastX] = GROUND | COLOR_PAIR(GROUND_KEY); break;
+                case SAND : map[pastY][pastX] = SAND | COLOR_PAIR(SAND_KEY); break;
+                case LAWN : map[pastY][pastX] = LAWN | COLOR_PAIR(LAWN_KEY); break;
+                case MOUNTAIN : map[pastY][pastX] = MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY); break;
+            }
+
 			zombies[i].point.y = ny;
             zombies[i].point.x = nx;
             if(zombies[i].actAmt > 0) map[ny][nx] = ZOMBIE | COLOR_PAIR(CRAZY_ZOMBIE_KEY);
-			else map[ny][nx] = ZOMBIE | COLOR_PAIR(ZOMBIE);
+			else map[ny][nx] = ZOMBIE | COLOR_PAIR(ZOMBIE_KEY);
         }
     }
 }
@@ -974,18 +1042,18 @@ void move_fzombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint) {
         if (player.point.y == ny && player.point.x == nx) can_move = 0;
         //이동 가능하면 이동
         if (can_move) {
-            switch(map[pastY][pastX] & A_CHARTEXT) {
-                case CARPET : map[fzombies[i].point.y][fzombies[i].point.x] = CARPET | COLOR_PAIR(CARPET_KEY); break;
-                case GROUND : map[fzombies[i].point.y][fzombies[i].point.x] = GROUND | COLOR_PAIR(GROUND_KEY); break;
-                case SAND : map[fzombies[i].point.y][fzombies[i].point.x] = SAND | COLOR_PAIR(SAND_KEY); break;
-                case LAWN : map[fzombies[i].point.y][fzombies[i].point.x] = LAWN | COLOR_PAIR(LAWN_KEY); break;
-                case MOUNTAIN : map[fzombies[i].point.y][fzombies[i].point.x] = MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY); break;
-            }
+			switch(map[ny][nx] & A_CHARTEXT) { 
+				case CARPET : map[pastY][pastX] = CARPET | COLOR_PAIR(CARPET_KEY); break;   
+				case GROUND : map[pastY][pastX] = GROUND | COLOR_PAIR(GROUND_KEY); break;   
+				case SAND : map[pastY][pastX] = SAND | COLOR_PAIR(SAND_KEY); break;  
+				case LAWN : map[pastY][pastX] = LAWN | COLOR_PAIR(LAWN_KEY); break;   
+				case MOUNTAIN : map[pastY][pastX] = MOUNTAIN | COLOR_PAIR(MOUNTAIN_KEY); break;   
+			}
 
             fzombies[i].point.y = ny;
             fzombies[i].point.x = nx;
             if(fzombies[i].actAmt > 0) map[ny][nx] = FZOMBIE | COLOR_PAIR(CRAZY_FZOMBIE_KEY);
-            else map[ny][nx] = FZOMBIE | COLOR_PAIR(FZOMBIE);
+            else map[ny][nx] = FZOMBIE | COLOR_PAIR(FZOMBIE_KEY);
         }
     }
 }
@@ -1041,7 +1109,7 @@ bool check_touch() {
             // 무적 시작
             player.invincible = 1;
             clock_gettime(CLOCK_MONOTONIC, &player.invincible_end);
-            player.invincible_end.tv_nsec += 500000000; // 0.5초
+            player.invincible_end.tv_nsec += 1000000000; // 0.5초
             if (player.invincible_end.tv_nsec >= 1000000000) {
                 player.invincible_end.tv_sec += 1;
                 player.invincible_end.tv_nsec -= 1000000000;
@@ -1053,7 +1121,7 @@ bool check_touch() {
             // 무적 시작
             player.invincible = 1;
             clock_gettime(CLOCK_MONOTONIC, &player.invincible_end);
-            player.invincible_end.tv_nsec += 500000000; // 0.5초
+            player.invincible_end.tv_nsec += 1000000000; // 0.5초
             if (player.invincible_end.tv_nsec >= 1000000000) {
                 player.invincible_end.tv_sec += 1;
                 player.invincible_end.tv_nsec -= 1000000000;
@@ -1085,95 +1153,103 @@ void you_die() {
 }
 
 void game_UI() {
-	//HP바
-	mvprintw(1, VIEW_WIDTH + 2, "HP");
-	//DAYNNIGHT BAR
-	mvprintw(4, VIEW_WIDTH + 2, "DAY & NIGHT");
+    //HP바
+    mvprintw(1, VIEW_WIDTH + 2, "HP");
+    //DAYNNIGHT BAR
+    mvprintw(4, VIEW_WIDTH + 2, "DAY & NIGHT");
 
-	// HP 바 색상: 채워진 부분(빨간색), 빈 부분(회색)
-	int hp_pixel = 28 * (player.hp/100.0);
-	for(int i = 2; i <= 3; ++i) {
-		for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + hp_pixel; ++j) {
-			mvaddch(i, j, ' ' | COLOR_PAIR(200+1)); // 빨간색(채워진 부분)
-		}
-		for(int j = VIEW_WIDTH + 2 + hp_pixel; j < VIEW_WIDTH + 2 + 28; ++j) {
-            mvaddch(i, j, ' ' | COLOR_PAIR(200+2)); // 회색(빈 부분)
+    int hp_pixel = 28 * (player.hp/100.0);
+    for(int i = 2; i <= 3; ++i) {
+        for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + hp_pixel; ++j) {
+            mvaddch(i, j, ' ' | COLOR_PAIR(200+1));
         }
-	}
-	
-	// DAY&NIGHT 바 색상: 낮(노란색), 밤(파란색), 빈 부분(회색)
-	int daynight_pixel = 28 * ((game_time%DAY_UNIT)/(double)DAY_UNIT);
-    for(int i = 5; i <= 5; ++i) {
-        if(is_day) {
-			for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + daynight_pixel; ++j) {
-            	mvaddch(i, j, ' ' | COLOR_PAIR(200+6)); // 노란색(낮)
-        	}
-        }
-		else {
-			for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + daynight_pixel; ++j) {
-                mvaddch(i, j, ' ' | COLOR_PAIR(200+7)); // 파란색(밤)
-            }
-		}
-
-		for(int j = VIEW_WIDTH + 2 + daynight_pixel; j < VIEW_WIDTH + 2 + 28; ++j) {
-            mvaddch(i, j, '.' | COLOR_PAIR(CARPET_KEY));
+        for(int j = VIEW_WIDTH+ 2 + hp_pixel; j < VIEW_WIDTH + 2 + 28; ++j) {
+            mvaddch(i, j, ' ' | COLOR_PAIR(200+4));
         }
     }
-	//아이템칸
-	for(int i = 7; i <= 10; ++i) {
+
+    int daynight_pixel = 28 * ((game_time%DAY_UNIT)/(double)DAY_UNIT);
+    for(int i = 5; i <= 5; ++i) {
+        if(is_day) {
+            for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + daynight_pixel; ++j) {
+                mvaddch(i, j, ' ' | COLOR_PAIR(200+3));
+            }
+        }
+        else {
+            for(int j = VIEW_WIDTH + 2; j < VIEW_WIDTH + 2 + daynight_pixel; ++j) {
+                mvaddch(i, j, ' ' | COLOR_PAIR(200+5));
+            }
+        }
+
+        for(int j = VIEW_WIDTH + 2 + daynight_pixel; j < VIEW_WIDTH + 2 + 28; ++j) {
+            mvaddch(i, j, ' ' | COLOR_PAIR(200+4));
+        }
+    }
+    
+    //아이템칸
+    for(int i = 7; i <= 10; ++i) {
+		/*
+        for(int j = 0; j <= 7; j++) {
+            mvaddch(i, VIEW_WIDTH + j + 2, '.' | COLOR_PAIR(200+4));
+        }
+
+        mvaddch(7, VIEW_WIDTH + 2 + 1, '_' | COLOR_PAIR(BULLET_CHAR_KEY));
+        mvaddch(7, VIEW_WIDTH + 2 + 6, '_' | COLOR_PAIR(BULLET_CHAR_KEY));
+        for(int j = 0; j <= 6; ++j) mvaddch(8, VIEW_WIDTH + 2 + j, GUN);
+        mvaddch(8, VIEW_WIDTH + 2 + 7, 'P' | COLOR_PAIR(BULLET_CHAR_KEY));
+
+        mvaddch(9, VIEW_WIDTH + 2, '/' | COLOR_PAIR(BULLET_CHAR_KEY));
+        mvaddch(9, VIEW_WIDTH + 2 + 4, '/' | COLOR_PAIR(BULLET_CHAR_KEY));
+        mvaddch(10, VIEW_WIDTH + 2 + 2, '/' | COLOR_PAIR(BULLET_CHAR_KEY));
+
+        mvaddch(9, VIEW_WIDTH + 2 + 1, GUN);
+        mvaddch(9, VIEW_WIDTH + 2 + 2, GUN);
+        mvaddch(10, VIEW_WIDTH + 2, GUN);
+        mvaddch(10, VIEW_WIDTH + 2 + 1, GUN);
+
+        mvaddch(9, VIEW_WIDTH + 2 + 3, 'Z' | COLOR_PAIR(BULLET_CHAR_KEY));
+
+        mvaddch(10, VIEW_WIDTH + 2 + 6, (char)(item.gun / 10 + '0') | COLOR_PAIR(BULLET_CHAR_KEY));
+        mvaddch(10, VIEW_WIDTH + 2 + 7, (char)(item.gun % 10 + '0') | COLOR_PAIR(BULLET_CHAR_KEY));
+		*/
+
 		for(int j = 0; j <= 7; j++) {
-			mvaddch(i, VIEW_WIDTH + j + 2, ' ' | COLOR_PAIR(200+2)); // 진한 회색 배경
-		}
-
-		mvaddch(7, VIEW_WIDTH + 2 + 1, '_' | COLOR_PAIR(200+3)); // 밝은 회색 테두리
-		mvaddch(7, VIEW_WIDTH + 2 + 6, '_' | COLOR_PAIR(200+3));
-		for(int j = 0; j <= 6; ++j) mvaddch(8, VIEW_WIDTH + 2 + j, GUN | COLOR_PAIR(200+4)); // 파란색 총알
-		mvaddch(8, VIEW_WIDTH + 2 + 7, 'P' | COLOR_PAIR(103)); // 파란색 아이콘
-
-		mvaddch(9, VIEW_WIDTH + 2, '/' | COLOR_PAIR(200+3));
-		mvaddch(9, VIEW_WIDTH + 2 + 4, '/' | COLOR_PAIR(200+3));
-		mvaddch(10, VIEW_WIDTH + 2 + 2, '/' | COLOR_PAIR(200+3));
-
-		mvaddch(9, VIEW_WIDTH + 2 + 1, GUN | COLOR_PAIR(200+5));
-		mvaddch(9, VIEW_WIDTH + 2 + 2, GUN | COLOR_PAIR(200+5));
-		mvaddch(10, VIEW_WIDTH + 2, GUN | COLOR_PAIR(200+5));
-		mvaddch(10, VIEW_WIDTH + 2 + 1, GUN | COLOR_PAIR(200+5));
-
-		mvaddch(9, VIEW_WIDTH + 2 + 3, 'Z' | COLOR_PAIR(103));
-		
-		mvaddch(10, VIEW_WIDTH + 2 + 6, (char)(item.gun / 10 + '0') | COLOR_PAIR(200+3));
-		mvaddch(10, VIEW_WIDTH + 2 + 7, (char)(item.gun % 10 + '0') | COLOR_PAIR(200+3));
-		
+            mvaddch(i, VIEW_WIDTH + j + 2, '.' | COLOR_PAIR(BULLET_CHAR_KEY));
+        }
+        mvaddch(10, VIEW_WIDTH + 2 + 6, (char)(item.gun / 10 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 7, (char)(item.gun % 10 + '0') | COLOR_PAIR(200+4));
 		for(int j = 0; j <= 7; j++) {
-			mvaddch(i, VIEW_WIDTH + j + 2 + 10, ' ' | COLOR_PAIR(200+2)); // 진한 회색 배경
-		}
-		mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)(item.injection / 10 + '0') | COLOR_PAIR(200+3));
-		mvaddch(10, VIEW_WIDTH + 2 + 7 + 10, (char)(item.injection % 10 + '0') | COLOR_PAIR(200+3));
-		for(int j = 0; j <= 7; j++) {
-			mvaddch(i, VIEW_WIDTH + j + 2 + 20, ' ' | COLOR_PAIR(200+2)); // 진한 회색 배경
-		}
-		mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)(item.packet / 10 + '0') | COLOR_PAIR(200+3));
-		mvaddch(10, VIEW_WIDTH + 2 + 7 + 20, (char)(item.packet % 10 + '0') | COLOR_PAIR(200+3));
-	}
-	
-	//모은 백신 조각
-	int vac_list_a[5][14] = { {13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 17},{13, 13, 13, 13, 14, 15, 15, 15, 15, 16, 17, 17, 17, 17},{13, 13, 13, 14, 14, 15, 15, 15, 16, 16, 17, 17, 17},{13, 13, 14, 14, 15, 15, 16, 16, 17, 17},{13, 13, 14, 15, 15, 15, 16, 16, 17, 17} };
-	int vac_list_b[5][14] = { {0, 1, 2, 0, 3, 0, 3, 0, 3, 0, 1, 2}, {0, 1, 2, 3, 0, 0, 1, 2, 3, 0, 1, 2, 3}, {0, 1, 2, 0, 3, 0, 1, 2, 0, 3, 0, 1, 2}, {0, 3, 0, 3, 0, 3, 0, 3, 1, 2}, {1, 2, 0, 0, 2, 3, 0, 3, 1, 2} };
+            mvaddch(i, VIEW_WIDTH + j + 2 + 10, '.' | COLOR_PAIR(INJECTION_KEY));
+        }
+        mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)(item.injection / 10 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 7 + 10, (char)(item.injection % 10 + '0') | COLOR_PAIR(200+4));
+        for(int j = 0; j <= 7; j++) {
+            mvaddch(i, VIEW_WIDTH + j + 2 + 20, '.' | COLOR_PAIR(200+6));
+        }
+        mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)(item.packet / 10 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 7 + 20, (char)(item.packet % 10 + '0') | COLOR_PAIR(200+4));
+    }
 
-	for(int i = 0; i < 5; ++i) {
-		if(!item.vac[i]) {
-			for(int j = 0; j < 14; ++j) {
-				if(vac_list_a[i][j] == 0) break;
-				mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, ' ' | COLOR_PAIR(CARPET_KEY)); // 회색(획득 전)
-			}
-		}
-		else {
-			for(int j = 0; j < 14; ++j) {
-				if(vac_list_a[i][j] == 0) break;
-				mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, ' ' | COLOR_PAIR(6)); // 노란색(획득 후)
-			}
-		}
-	}
+    //모은 백신 조각
+
+    int vac_list_a[5][14] = { {13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 17},{13, 13, 13, 13, 14, 15, 15, 15, 15, 16, 17, 17, 17, 17},{13, 13, 13, 14, 14, 15, 15, 15, 16, 16, 17, 17, 17},{13, 13, 14, 14, 15, 15, 16, 16, 17, 17},{13, 13, 14, 15, 15, 15, 16, 16, 17, 17} };
+    int vac_list_b[5][14] = { {0, 1, 2, 0, 3, 0, 3, 0, 3, 0, 1, 2}, {0, 1, 2, 3, 0, 0, 1, 2, 3, 0, 1, 2, 3}, {0, 1, 2, 0, 3, 0, 1, 2, 0, 3, 0, 1, 2}, {0, 3, 0, 3, 0, 3, 0, 3, 1, 2}, {1, 2, 0, 0, 2, 3, 0, 3, 1, 2} };
+
+
+    for(int i = 0; i < 5; ++i) {
+        if(!item.vac[i]) {
+            for(int j = 0; j < 14; ++j) {
+                if(vac_list_a[i][j] == 0) break;
+                mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, '.' | COLOR_PAIR(200+4));
+            }
+        }
+        else {
+            for(int j = 0; j < 14; ++j) {
+                if(vac_list_a[i][j] == 0) break;
+                mvaddch(vac_list_a[i][j] - 1, VIEW_WIDTH + 2 + vac_list_b[i][j] + i * 6, '.' | COLOR_PAIR(200+2));
+            }
+        }
+    }
 }
 
 void use_item(int item_num) {
@@ -1184,21 +1260,28 @@ void use_item(int item_num) {
 
             // 플레이어가 바라보는 방향으로 10칸 탐색
             int dx = 0, dy = 0;
+			int gunDistance = 7;
             if(player.lookDir == UP) dy = -1;
             else if(player.lookDir == DOWN) dy = 1;
-            else if(player.lookDir == LEFT) dx = -1;
-            else if(player.lookDir == RIGHT) dx = 1;
+            else if(player.lookDir == LEFT) {
+				dx = -1;
+				gunDistance = 13;
+			}
+            else if(player.lookDir == RIGHT) {
+				dx = 1;
+				gunDistance = 13;
+			}
 
             int px = player.point.x;
             int py = player.point.y;
 
-            for(int i = 1; i <= 10; ++i) {
+            for(int i = 1; i <= gunDistance; ++i) {
                 int nx = px + dx * i;
                 int ny = py + dy * i;
                 if(nx < 0 || nx >= MAP_WIDTH || ny < 0 || ny >= MAP_HEIGHT) break;
                 
                 // 시각적 이펙트 표시
-                mvaddch(ny - startPoint.y, nx - startPoint.x, BULLET_CHAR | COLOR_PAIR(103) | A_BOLD);
+                mvaddch(ny - startPoint.y, nx - startPoint.x, BULLET_CHAR | COLOR_PAIR(BULLET_CHAR_KEY) | A_BOLD);
                 refresh();
                 usleep(5000); // 0.005초
                 
@@ -1207,7 +1290,7 @@ void use_item(int item_num) {
 					bool is_alive = true;
                     // 좀비 배열에서 해당 좌표의 좀비를 찾아서 alive = 0
                     for(int j = 0; j < zombie_count; ++j) {
-                        if(zombies[j].alive && zombies[j].point.y == ny && zombies[j].point.x == nx) {
+                        if(zombies[j].alive && (zombies[j].point.y == ny) && (zombies[j].point.x == nx)) {
                             --(zombies[j].hp);
                             if(zombies[j].hp <= 0) {
 								zombies[j].alive = 0;
@@ -1218,7 +1301,7 @@ void use_item(int item_num) {
                     }
                     // 맵에서 좀비 제거
 					if(!is_alive) {
-						map[ny][nx] = GROUND | COLOR_PAIR(1);
+						map[ny][nx] = GROUND | COLOR_PAIR(GROUND_KEY);
                     	break; // 한 마리만 제거
 					}
                 }
@@ -1226,10 +1309,10 @@ void use_item(int item_num) {
 					bool is_alive = true;
                     // 빠른 좀비 죽이기 코드
                     for(int j = 0; j < fzombie_count; ++j) {
-                        if(fzombies[j].alive && fzombies[j].point.y == ny && fzombies[j].point.x == nx) {
-                        	--(fzombies[j].hp);
+                        if(fzombies[j].alive && (fzombies[j].point.y == ny) && (fzombies[j].point.x == nx)) {
+							--(fzombies[j].hp);
                             if(fzombies[j].hp <= 0) {
-                                fzombies[j].alive = 0;
+								fzombies[j].alive = 0;
                                 is_alive = false;
                             }
                             break;
@@ -1237,7 +1320,7 @@ void use_item(int item_num) {
                     }
 
                 	if(!is_alive) {
-                        map[ny][nx] = GROUND | COLOR_PAIR(1);
+                        map[ny][nx] = GROUND | COLOR_PAIR(GROUND_KEY);
                         break; // 한 마리만 제거
                     }
 				}
@@ -1259,7 +1342,7 @@ void use_item(int item_num) {
             };
 
             // Display Pattern 1
-            attron(COLOR_PAIR(3)); // Assuming color pair 3 is for green text
+            attron(COLOR_PAIR(INJECTION_KEY)); // Assuming color pair 3 is for green text
             for (int dy = -1; dy <= 1; ++dy) {
                 for (int dx = -2; dx <= 2; ++dx) {
                     int nx = px + dx;
@@ -1289,7 +1372,7 @@ void use_item(int item_num) {
 					*/
                 }
             }
-            attroff(COLOR_PAIR(3));
+            attroff(COLOR_PAIR(INJECTION_KEY));
             refresh();
 
             usleep(200000);
@@ -1304,7 +1387,7 @@ void use_item(int item_num) {
             };
             
             // Display Pattern 2 (clears old pattern area implicitly)
-            attron(COLOR_PAIR(3));
+            attron(COLOR_PAIR(INJECTION_KEY));
             for (int dy = -2; dy <= 2; ++dy) {
                 for (int dx = -3; dx <= 3; ++dx) {
                     int nx = px + dx;
@@ -1318,7 +1401,7 @@ void use_item(int item_num) {
                         	--(zombies[i].hp);
                             if(zombies[i].hp <= 0) {
                                 zombies[i].alive = 0;
-                                map[ny][nx] = GROUND | COLOR_PAIR(1);
+                                map[ny][nx] = GROUND | COLOR_PAIR(GROUND_KEY);
                             }
 						}
                     }
@@ -1329,13 +1412,13 @@ void use_item(int item_num) {
                         	--(fzombies[i].hp);
                             if(fzombies[i].hp <= 0) {
                                 fzombies[i].alive = 0;
-                                map[ny][nx] = GROUND | COLOR_PAIR(1);
+                                map[ny][nx] = GROUND | COLOR_PAIR(GROUND_KEY);
                             }
 						}
                     }
                 }
             }
-            attroff(COLOR_PAIR(3));
+            attroff(COLOR_PAIR(INJECTION_KEY));
             refresh();
         }
     }
