@@ -9,11 +9,21 @@ git push -u origin main
 
 업데이트 받고 싶을 때  
 ```
-이거 아는 사람 업데이트좀.
+git pull
 ```
+## 게임 실행 방법
+- 실행 환경 : wsl, 우분투 환경
+- 설치 방법
+  ```
+  sudo apt update
+  sudo apt upgrade -y
+  sudo apt-get install libncurses5-dev libncursesw5-dev
+  gcc Curvival.c -lncurses -lm
+  ./a.out
+  ```
 
 ## 💻 Developers
-
+이 게임은 숭실대학교 1학년 3명이 김익수 교수님의 '프로그래밍1및실습'을 듣고 C언어로 만든 게임이다.
 <table>
       <tr align="center">
        <td>CodeSorting<br/>
@@ -86,8 +96,10 @@ C-Survival, 즉, Curvival의 설정 및 스토리는 다음과 같다.<br>
 ## 설정 – 컴퓨터 속 또 다른 세계
 우리가 보는 바탕화면, 앱 아이콘, 폴더…  
 그 모든 것의 안쪽에는 **‘디지털 시티’**, 즉 프로그램들로 이루어진 자율 생명체들의 세상이 존재한다.  
-- 그들은 메모리 블록 속에서 살아가며, CPU 스케줄을 따라 하루를 산다.  
-- 그러나 `TrojanHorse.exe`는 단순한 바이러스가 아니었다.  
+- 그들은 메모리 블록 속에서 살아가며, CPU 스케줄을 따라 하루를 산다.
+  - 마을, 산, 강, 사막, 미로바위는 모두 디지털 시티의 메모리이자 파티션이고 서로를 잇는 다리들이 존재한다.
+  - 이 공간에는 수많은 프로세스 주민들이 IPC(Inter-Process Communication)를 하며 지냈다.
+- 그러나 어느날 `TrojanHorse.exe`이라는 건물 하나가 들어오게 된다.  
   - 그 안에 숨어 있던 **좀비 코드**들이 깨어나 프로그램 세계를 공격하기 시작했다.  
   - 정상적인 애플리케이션, 시스템 프로세스를 감염시켜 버그화시키고,  
   - 살아남은 코드들마저 추적해 파괴한다.
