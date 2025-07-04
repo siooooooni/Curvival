@@ -204,6 +204,7 @@ void move_fzombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint);
 int grab_item();
 bool check_touch();
 void you_die();
+void you_win();
 void option();
 void game_UI();
 void use_item(int);
@@ -365,16 +366,19 @@ int main() {
         int key = getch(); //키보드 입력 받기
         if(key != -1){ //키보드 입력이 있다면
             if (key=='i') grab_item();
-			else {
+			else if (key=='l') {
 				use_item(key);
 			}
+			else {
+				if(zombie_act_distance <= ZOMBIE_ACT_LIMIT) {
+                	zombie_act_distance += ZOMBIE_NOIZE_UNIT;
+            	}
+            	if(fzombie_act_distance <= FZOMBIE_ACT_LIMIT) {
+                	fzombie_act_distance += FZOMBIE_NOIZE_UNIT;
+            	}
 
-            if(zombie_act_distance <= ZOMBIE_ACT_LIMIT) {
-                zombie_act_distance += ZOMBIE_NOIZE_UNIT;
-            }
-			if(fzombie_act_distance <= FZOMBIE_ACT_LIMIT) {
-                fzombie_act_distance += FZOMBIE_NOIZE_UNIT;
-            }
+				use_item(key);
+			}
 
 			int pastY = player.point.y, pastX = player.point.x;
             HumanMove(&player, key);
@@ -448,22 +452,8 @@ int main() {
 
         // 슈퍼모드 클리어 체크
         if(is_super_mode && super_zombie_spawned <= 0) {
-            endwin();
-            system("clear");
-            printf("\n\n");
-            printf("  ______ _      _____ _____  ______ _____  \n");
-            printf(" |  ____| |    |_   _|  __ \\|  ____|  __ \\ \n");
-            printf(" | |__  | |      | | | |  | | |__  | |__) |\n");
-            printf(" |  __| | |      | | | |  | |  __| |  _  / \n");
-            printf(" | |____| |____ _| |_| |__| | |____| | \\ \\ \n");
-            printf(" |______|______|_____|_____/|______|_|  \\_\n");
-            printf("\n\n");
-            printf("   축하합니다! 좀비를 모두 박멸했습니다!\n");
-            printf("   게임을 클리어하셨습니다!\n");
-            printf("\n\n");
-            sleep(5);
-            exit(0);
-        }
+        	you_win();
+		}
     }
     endwin();
     return 0;
@@ -1574,4 +1564,61 @@ void use_item(int item_num) {
             else if(!is_super_mode && player.hp > 100) player.hp = 100;
         }
     }
+}
+void you_win() {
+    int max_y, max_x;
+    int i, j, k;
+
+    getmaxyx(stdscr, max_y, max_x);
+
+    srand(time(NULL));
+
+    for (i = 0; i < 25; ++i) {
+        clear();
+        for (j = 0; j < 5; ++j) {
+            int fy = rand() % (max_y - 6) + 3; // 폭죽 중심 y
+            int fx = rand() % (max_x - 12) + 6; // 폭죽 중심 x
+
+            mvprintw(fy, fx, "*");
+
+            for (k = 1; k <= 3; ++k) {
+                int dy[8] = {-k, -k, 0, k, k, k, 0, -k};
+                int dx[8] = {0, k, k, k, 0, -k, -k, -k};
+                for (int d = 0; d < 8; ++d) {
+                    mvprintw(fy + dy[d], fx + dx[d], "*");
+                }
+            }
+        }
+        if (i % 2 == 0) {
+            attron(A_BOLD);
+            mvprintw(max_y / 2, (max_x - 8) / 2, "YOU WIN!");
+            attroff(A_BOLD);
+        }
+        refresh();
+        usleep(120000);
+    }
+
+    clear();
+    int credit_y = max_y / 2 - 6;
+
+    attron(A_BOLD);
+    mvprintw(credit_y, (max_x - 19) / 2, "GAME ENDING CREDITS");
+    attroff(A_BOLD);
+    mvprintw(credit_y + 2, (max_x - 66) / 2, "Developer: Jongbin Choi (Soongsil Univ. Dept. of Computer Science)");
+    mvprintw(credit_y + 3, (max_x - 62) / 2, "Developer: Sion Lee (Soongsil Univ. Dept. of Computer Science)");
+    mvprintw(credit_y + 4, (max_x - 67) / 2, "Developer: Hankyul Jang (Soongsil Univ. Dept. of Computer Science)");
+    mvprintw(credit_y + 6, (max_x - 27) / 2, "Development Period: 10 days");
+    mvprintw(credit_y + 7, (max_x - 41) / 2, "Development Computer Language: C Language");
+
+    attron(A_ITALIC);
+    mvprintw(credit_y + 9, (max_x - 51) / 2, "Thank you so much to everyone who played this game!");
+    attroff(A_ITALIC);
+
+    mvprintw(credit_y + 11, (max_x - 22) / 2, "Press Ctrl + C to exit");
+
+    refresh();
+    usleep(999999999);
+
+    endwin();
+    exit(0);
 }
