@@ -1240,17 +1240,20 @@ void game_UI() {
 		for(int j = 0; j <= 7; j++) {
             mvaddch(i, VIEW_WIDTH + j + 2, '.' | COLOR_PAIR(BULLET_CHAR_KEY));
         }
-        mvaddch(10, VIEW_WIDTH + 2 + 6, (char)(item.gun / 10 + '0') | COLOR_PAIR(200+4));
+		mvaddch(10, VIEW_WIDTH + 2 + 5, (char)(item.gun / 100 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 6, (char)((item.gun / 10) % 10 + '0') | COLOR_PAIR(200+4));
         mvaddch(10, VIEW_WIDTH + 2 + 7, (char)(item.gun % 10 + '0') | COLOR_PAIR(200+4));
 		for(int j = 0; j <= 7; j++) {
             mvaddch(i, VIEW_WIDTH + j + 2 + 10, '.' | COLOR_PAIR(INJECTION_KEY));
-        }
-        mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)(item.injection / 10 + '0') | COLOR_PAIR(200+4));
+        } 
+		mvaddch(10, VIEW_WIDTH + 2 + 5 + 10, (char)(item.injection / 100 + '0') | COLOR_PAIR(200+4));
+		mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)((item.injection / 10) % 10 + '0') | COLOR_PAIR(200+4));
         mvaddch(10, VIEW_WIDTH + 2 + 7 + 10, (char)(item.injection % 10 + '0') | COLOR_PAIR(200+4));
         for(int j = 0; j <= 7; j++) {
             mvaddch(i, VIEW_WIDTH + j + 2 + 20, '.' | COLOR_PAIR(200+6));
         }
-        mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)(item.packet / 10 + '0') | COLOR_PAIR(200+4));
+		mvaddch(10, VIEW_WIDTH + 2 + 5 + 20, (char)(item.packet / 100 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)((item.packet / 10) % 10 + '0') | COLOR_PAIR(200+4));
         mvaddch(10, VIEW_WIDTH + 2 + 7 + 20, (char)(item.packet % 10 + '0') | COLOR_PAIR(200+4));
     }
 
