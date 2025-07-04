@@ -1,8 +1,9 @@
 # CURVIVAL
 ## 목차
 1. [개발자](#개발자)
-2. [게임 실행 환경](#게임-실행-방법)
-3. [게임 설정 및 스토리](#게임-설정-및-스토리)  
+2. [게임 실행 영상](#게임-실행-영상)
+3. [게임 실행 환경](#게임-실행-방법)
+4. [게임 설정 및 스토리](#게임-설정-및-스토리)  
 
 ---
 
@@ -51,18 +52,22 @@
 </table>
 
 ---
+## 게임 실행 영상
+
+
 
 ## 게임 실행 방법
 - 실행 환경 : wsl, 우분투 환경
 - 설치 방법
   ```
   sudo apt update
-  sudo apt upgrade -y
+  sudo apt upgrade
   sudo apt-get install libncurses5-dev libncursesw5-dev
   gcc Curvival.c -lncurses -lm
   ./a.out
   ```
-
+  이미 Curvival이라는 실행 파일이 있긴 하다.
+   
 ---
 
 ## 게임 설정 및 스토리 
