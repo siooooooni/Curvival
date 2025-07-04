@@ -163,7 +163,7 @@ typedef struct {
 	int packet; //패킷 수
     int UI_hp;
 } UI_item;
-UI_item item = {.gun = 30, .vac = {0}, .injection = 10, .packet = 999,.UI_hp = 100};
+UI_item item = {.gun = 50, .vac = {0}, .injection = 10, .packet = 30,.UI_hp = 100};
 chtype map[MAP_HEIGHT][MAP_WIDTH];
 human player = {.role = PLAYER, .point = {21, 267}, .hp = 100, .lookDir = RIGHT};
 
@@ -427,17 +427,8 @@ int main() {
 			game_time += 1;
             last_game_time = now_game_time; //현재 시간 구조체에 저장
         
-			if(game_time % DAY_UNIT == 0) {
+			if(!is_super_mode && game_time % DAY_UNIT == 0) {
             	is_day = !is_day;
-
-				if(is_day) {
-                    if(can_change_color()) {
-                    }
-                }
-                else    {
-                    if(can_change_color()) {
-                    }
-                }
         	}
 		}
 
@@ -522,26 +513,24 @@ void swap_int(int* a, int* b) {
 void init_UI() {
 	while (1) {	
     	printf("==============================\n");
-    	printf("\tZOMBIE SURVIVAL\n");
+    	printf("\t   CURVIVAL\n");
     	printf("==============================\n");
     	printf("\t0. Prologue\n");
     	printf("\t1. New Game\n");
-   		printf("\t2. Load Game (미구현) \n");
-    	printf("\t3. Options (미구현) \n");
-    	printf("\t4. Exit\n");
-    	printf("GAME START? : ");
+    	printf("\t2. How to play \n");
+    	printf("\t3. Exit\n");
+    	printf("SELECT NUMBER > ");
     	int n = 0;
     	scanf("%d",&n);
     	getchar();
-    	if (n==4) exit(0);
+    	if (n==3) exit(0);
     	else if (n==1) {
         	return;
     	}
 		else if (n==0) {
 			init_story();
 		}
-		//else if (n==2) {}
-    	else if (n==3) {
+    	else if (n==2) {
 			option();
 		}
 	}
@@ -679,7 +668,7 @@ void draw_view_map(chtype map[MAP_HEIGHT][MAP_WIDTH], human player){
                 mvaddch(y, x, '8' | COLOR_PAIR(PLAYER_KEY) | A_BOLD);
             } else {
                 char c = map[i][j] & A_CHARTEXT;
-                if(is_day) {
+                if(is_day || is_super_mode) {
                     switch(c) {
                         case CARPET : mvaddch(y, x, CARPET | COLOR_PAIR(CARPET_KEY + 50)); break;
                         case GROUND : mvaddch(y, x, GROUND | COLOR_PAIR(GROUND_KEY + 50)); break;
@@ -1092,7 +1081,7 @@ int grab_item() { //아이템 랜덤 줍기
             int k = rand()%3;
             if (!k) item.gun += 20;
             else if (k==1) item.injection += 2;
-            else item.packet += 1;
+            else item.packet += 5;
             map[ny][nx] = GROUND | COLOR_PAIR(GROUND_KEY);
         }
         else if (cur=='D') {
@@ -1135,7 +1124,7 @@ int grab_item() { //아이템 랜덤 줍기
             int zidx = 0;
             int center_y = 71;
             int center_x = 170; //원형 건물 가운데로 조정
-            int radius = 20; // 원 반지름, 필요시 조정
+            int radius = 15; // 원 반지름, 필요시 조정
             for (int z=0;z<100;++z) {
                 int y,x;
                 do {
@@ -1168,6 +1157,7 @@ int grab_item() { //아이템 랜덤 줍기
             fzombie_count = 0;
             // 3. 슈퍼모드 진입
             is_super_mode = true;
+            is_day = true; // 슈퍼모드 진입 시 낮으로 고정
             super_zombie_spawned = 100;
             super_zombie_total = 100;
             player.hp = 1000;
@@ -1279,8 +1269,8 @@ void game_UI() {
 
     // (추가) 슈퍼모드 남은 좀비 수 표시
     if (is_super_mode) {
-        mvprintw(6, VIEW_WIDTH + 2, "SUPER ZOMBIE: %3d", super_zombie_spawned);
-    }
+		mvprintw(VIEW_HEIGHT + 1, VIEW_WIDTH / 2 - 10, "REMAINING VIRUS: %3d", super_zombie_spawned);
+	}
 
     int hp_pixel = 28 * (player.hp/100.0);
     for(int i = 2; i <= 3; ++i) {
@@ -1527,7 +1517,7 @@ void use_item(int item_num) {
                     for (int i = 0; i < zombie_count; ++i) {
                         if (zombies[i].alive && zombies[i].point.y == ny && zombies[i].point.x == nx) {
 							if(is_super_mode) zombies[i].hp = 1;
-                        	--(zombies[i].hp);
+                        	zombies[i].hp -= 5;
                             if(zombies[i].hp <= 0) {
                                 zombies[i].alive = 0;
                                 map[ny][nx] = GROUND | COLOR_PAIR(GROUND_KEY);
@@ -1540,7 +1530,7 @@ void use_item(int item_num) {
                     for (int i = 0; i < fzombie_count; ++i) {
                         if (fzombies[i].alive && fzombies[i].point.y == ny && fzombies[i].point.x == nx) {
 							if(is_super_mode) fzombies[i].hp = 1;
-                        	--(fzombies[i].hp);
+                        	fzombies[i].hp -= 5;
                             if(fzombies[i].hp <= 0) {
                                 fzombies[i].alive = 0;
                                 map[ny][nx] = GROUND | COLOR_PAIR(GROUND_KEY);
