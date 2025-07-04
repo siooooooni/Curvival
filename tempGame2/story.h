@@ -64,7 +64,7 @@ void init_story() {
 	printf("Enter로 계속...\n");
 	story_waiting();
     
-	printf("내 컴퓨터의 ‘세상’은 뒤틀리기 시작했다.\n");
+	printf("내 컴퓨터의 세상은 뒤틀리기 시작했다.\n");
     sleep(1);
     printf("화면이 깜빡이고, 익숙하던 프로그램들이 오작동하더니,\n");
 	printf("       _______________________\n");
@@ -82,13 +82,11 @@ void init_story() {
     printf("Enter로 계속...\n");
 	story_waiting();
 
-    printf("- 사용자, 디버깅을 결심하다\n");
-    sleep(1);
     printf("나는 안다.\n");
     sleep(1);
     printf("지금 이 컴퓨터가 완전히 감염되면,\n");
     sleep(1);
-    printf("내 업무, 내 기억, 나의 삶—전부 날아간다.\n");
+    printf("내 업무, 내 기억, 나의 삶이 전부 날아간다.\n");
     sleep(1);
     printf("그래서 나는 직접 컴퓨터 내부로 접속하기로 했다.\n");
     sleep(1);
