@@ -53,7 +53,7 @@
 
 ---
 ## 게임 실행 영상
-
+![Image](https://github.com/user-attachments/assets/fd539753-6ebc-4066-97d6-bda7a2b41626)
 
 
 ## 게임 실행 방법
