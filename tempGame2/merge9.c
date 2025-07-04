@@ -1133,9 +1133,9 @@ int grab_item() { //아이템 랜덤 줍기
             }
             // 2. 좀비 100마리 소환 (맵 중앙 원 근처)
             int zidx = 0;
-            int center_y = MAP_HEIGHT / 2;
-            int center_x = MAP_WIDTH / 2;
-            int radius = 25; // 원 반지름, 필요시 조정
+            int center_y = 71;
+            int center_x = 170; //원형 건물 가운데로 조정
+            int radius = 20; // 원 반지름, 필요시 조정
             for (int z=0;z<100;++z) {
                 int y,x;
                 do {
