@@ -163,7 +163,7 @@ typedef struct {
 	int packet; //패킷 수
     int UI_hp;
 } UI_item;
-UI_item item = {.gun = 30, .vac = {0}, .injection = 10, .packet = 1000,.UI_hp = 100};
+UI_item item = {.gun = 30, .vac = {0}, .injection = 10, .packet = 999,.UI_hp = 100};
 chtype map[MAP_HEIGHT][MAP_WIDTH];
 human player = {.role = PLAYER, .point = {21, 267}, .hp = 100, .lookDir = RIGHT};
 
@@ -204,6 +204,7 @@ void move_fzombies(chtype map[MAP_HEIGHT][MAP_WIDTH], yx playerPoint);
 int grab_item();
 bool check_touch();
 void you_die();
+void option();
 void game_UI();
 void use_item(int);
 
@@ -550,7 +551,9 @@ void init_UI() {
 			init_story();
 		}
 		//else if (n==2) {}
-    	//else if (n==3) {}
+    	else if (n==3) {
+			option();
+		}
 	}
 }
 
@@ -1179,6 +1182,9 @@ int grab_item() { //아이템 랜덤 줍기
             super_zombie_total = 100;
             player.hp = 1000;
             item.UI_hp = 1000;
+			item.gun = 999;
+			item.injection = 999;
+			item.packet = 999;
             // 4. $는 사라짐
             map[ny][nx] = GROUND | COLOR_PAIR(GROUND_KEY);
         }
@@ -1241,6 +1247,17 @@ void you_die() {
     printf("\n\n");
     sleep(5);
     exit(0);
+}
+
+void option() {
+    endwin(); // ncurses 모드 해제
+    system("clear");
+    printf("\n\n");
+    printf("W\t:\t위로 이동\t\tJ\t:\t총 발사\n\n");
+    printf("A\t:\t왼쪽으로 이동\t\tK\t:\t인젝션 (범위 공격)\n\n");
+    printf("S\t:\t아래로 이동\t\tL\t:\t패킷 (회복)\n\n");
+    printf("D\t:\t오른쪽으로 이동\t\tI\t:\t아이템 줍기\n\n\n");                                                                                         printf("Enter를 눌러 메뉴로 이동");
+    story_waiting();
 }
 
 void game_UI() {
@@ -1333,20 +1350,22 @@ void game_UI() {
 		for(int j = 0; j <= 7; j++) {
             mvaddch(i, VIEW_WIDTH + j + 2, '.' | COLOR_PAIR(BULLET_CHAR_KEY));
         }
-        mvaddch(10, VIEW_WIDTH + 2 + 6, (char)(item.gun / 10 + '0') | COLOR_PAIR(200+4));
+		mvaddch(10, VIEW_WIDTH + 2 + 5, (char)(item.gun / 100 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 6, (char)((item.gun / 10) % 10 + '0') | COLOR_PAIR(200+4));
         mvaddch(10, VIEW_WIDTH + 2 + 7, (char)(item.gun % 10 + '0') | COLOR_PAIR(200+4));
-		for(int j = 0; j <= 7; j++) {
+        for(int j = 0; j <= 7; j++) {
             mvaddch(i, VIEW_WIDTH + j + 2 + 10, '.' | COLOR_PAIR(INJECTION_KEY));
         }
-        mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)(item.injection / 10 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 5 + 10, (char)(item.injection / 100 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 6 + 10, (char)((item.injection / 10) % 10 + '0') | COLOR_PAIR(200+4));
         mvaddch(10, VIEW_WIDTH + 2 + 7 + 10, (char)(item.injection % 10 + '0') | COLOR_PAIR(200+4));
         for(int j = 0; j <= 7; j++) {
             mvaddch(i, VIEW_WIDTH + j + 2 + 20, '.' | COLOR_PAIR(200+6));
         }
-        mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)(item.packet / 10 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 5 + 20, (char)(item.packet / 100 + '0') | COLOR_PAIR(200+4));
+        mvaddch(10, VIEW_WIDTH + 2 + 6 + 20, (char)((item.packet / 10) % 10 + '0') | COLOR_PAIR(200+4));
         mvaddch(10, VIEW_WIDTH + 2 + 7 + 20, (char)(item.packet % 10 + '0') | COLOR_PAIR(200+4));
     }
-
     //모은 백신 조각
 
     int vac_list_a[5][14] = { {13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 17},{13, 13, 13, 13, 14, 15, 15, 15, 15, 16, 17, 17, 17, 17},{13, 13, 13, 14, 14, 15, 15, 15, 16, 16, 17, 17, 17},{13, 13, 14, 14, 15, 15, 16, 16, 17, 17},{13, 13, 14, 15, 15, 15, 16, 16, 17, 17} };
